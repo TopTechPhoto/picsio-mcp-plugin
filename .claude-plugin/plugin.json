@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "picsio",
+  "displayName": "Pics.io",
+  "version": "0.1.0",
+  "description": "Connect your AI assistant to your Pics.io digital asset library. Browse and search collections, find assets with rich filters — keywords, people, ratings, color labels, file types, dates — read full metadata, and pull safe previews, so answers are grounded in the approved files your team actually ships. Read-only.",
+  "author": {
+    "name": "TopTechPhoto",
+    "email": "support@pics.io",
+    "url": "https://pics.io"
+  },
+  "homepage": "https://pics.io",
+  "repository": "https://github.com/TopTechPhoto/picsio-mcp-plugin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "picsio",
+    "dam",
+    "digital-asset-management",
+    "media-library",
+    "brand-assets",
+    "creative-operations",
+    "mcp"
+  ],
+  "mcpServers": "./.mcp.json",
+  "commands": "./commands/",
+  "skills": "./skills/"
+}

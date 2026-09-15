@@ -1,0 +1,19 @@
+Pics.io plugin
+Copyright 2026 TopTechPhoto
+
+This product includes software developed by TopTechPhoto (https://pics.io).
+
+The Apache License 2.0 in LICENSE covers the packaging in this repository —
+the plugin and extension manifests, the skills, the commands and the
+maintenance scripts.
+
+It does NOT cover the Pics.io service reached at https://mcp.pics.io/mcp.
+Pics.io is a commercial service; using it through this plugin requires a
+Pics.io account and is governed by the Pics.io Terms of Use
+(https://pics.io/terms-of-use) and Privacy Policy
+(https://pics.io/privacy-policy).
+
+"Pics.io", "Toriut", "Provenyx" and the Pics.io logo are trademarks of
+TopTechPhoto. The Apache License grants no trademark rights; see section 6 of
+LICENSE. Forks and derivative distributions must not present themselves as the
+official Pics.io plugin.

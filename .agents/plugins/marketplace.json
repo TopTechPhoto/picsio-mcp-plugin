@@ -1,0 +1,20 @@
+{
+  "name": "picsio",
+  "interface": {
+    "displayName": "Pics.io"
+  },
+  "plugins": [
+    {
+      "name": "picsio",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/TopTechPhoto/picsio-mcp-plugin.git"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

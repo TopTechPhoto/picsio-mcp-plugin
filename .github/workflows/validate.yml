@@ -1,0 +1,66 @@
+name: Validate
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    # Catch the endpoint going away, or manifests drifting via a merge.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  manifests:
+    name: Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate manifests, skills and commands
+        run: node scripts/validate.mjs
+
+  endpoint:
+    name: MCP endpoint reachable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe the declared MCP server
+        run: |
+          set -euo pipefail
+          url="$(jq -r '.mcpServers.picsio.url' .mcp.json)"
+          echo "Probing $url"
+
+          # An unauthenticated MCP endpoint is expected to answer 401/403/405.
+          # Only a 404/410 or a connection failure means it is actually gone —
+          # this mirrors the liveness check the Claude plugin marketplace runs.
+          code="$(curl -sS -o /dev/null -w '%{http_code}' \
+                    --connect-timeout 10 --max-time 15 --retry 2 --retry-delay 2 \
+                    -L -X POST \
+                    -H 'Content-Type: application/json' \
+                    -H 'Accept: application/json, text/event-stream' \
+                    --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+                    "$url" 2>/dev/null)" || code="000"
+
+          echo "HTTP $code"
+          case "$code" in
+            000)     echo "::error::$url is unreachable"; exit 1 ;;
+            404|410) echo "::error::$url is gone"; exit 1 ;;
+            *)       echo "Endpoint is alive." ;;
+          esac
+
+      - name: Check OAuth discovery advertises the same resource
+        run: |
+          set -euo pipefail
+          resource="$(curl -fsSL --max-time 15 \
+            https://mcp.pics.io/.well-known/oauth-protected-resource | jq -r '.resource')"
+          expected="$(jq -r '.mcpServers.picsio.url' .mcp.json)"
+          echo "discovery: $resource"
+          if [ "$resource" != "$expected" ]; then
+            echo "::error::OAuth discovery advertises $resource but .mcp.json declares $expected"
+            exit 1
+          fi

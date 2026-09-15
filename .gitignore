@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+*.log
+
+# Per-developer tool settings. Anything under .claude/ is cloned onto a user's
+# disk when the plugin is installed from git, and is read by the marketplace
+# policy scan — keep it out of the shipped payload.
+.claude/

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "picsio": {
+      "type": "http",
+      "url": "https://mcp.pics.io/mcp"
+    }
+  }
+}

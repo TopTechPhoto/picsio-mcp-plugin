@@ -1,0 +1,11 @@
+{
+  "name": "picsio",
+  "version": "0.1.0",
+  "description": "Connect your AI assistant to your Pics.io digital asset library. Browse and search collections, find assets with rich filters — keywords, people, ratings, color labels, file types, dates — read full metadata, and pull safe previews, so answers are grounded in the approved files your team actually ships. Read-only.",
+  "mcpServers": {
+    "picsio": {
+      "httpUrl": "https://mcp.pics.io/mcp"
+    }
+  },
+  "contextFileName": "GEMINI.md"
+}

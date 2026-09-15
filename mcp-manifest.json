@@ -1,0 +1,351 @@
+{
+    "name": "picsio",
+    "version": "0.1.0",
+    "instructions": "Read-only access to Pics.io digital assets. Use picsio_search_assets to find assets, picsio_get_asset for full metadata, and picsio_get_asset_preview for a safe preview URL.",
+    "endpoint": "/mcp",
+    "auth": {
+        "type": "bearer"
+    },
+    "tools": [
+        {
+            "name": "picsio_search_collections",
+            "description": "List or search Pics.io collections by name/path and description. Use this as a discovery step before asset search: find relevant collections, then call picsio_search_assets with collection_ids. Blank query lists direct children of parent_id, or top-level collections when parent_id is omitted. Returns id, name, description, path, has_child, and archived.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "description": "Search collections by name/path and description. Blank or omitted lists children of parent_id, or top-level collections if parent_id is also omitted. Ignored when empty, \".\", or \"..\" after trim.",
+                        "type": "string"
+                    },
+                    "parent_id": {
+                        "description": "When query is blank, list direct children of this collection. Must be a 24-character hex collection id. Omitted or empty lists top-level collections. Ignored when query is present.",
+                        "type": "string"
+                    },
+                    "include_archived": {
+                        "description": "Include archived collections in the results. Default false.",
+                        "type": "boolean"
+                    },
+                    "limit": {
+                        "description": "Max results to return (1-100).",
+                        "type": "integer"
+                    },
+                    "offset": {
+                        "description": "Number of results to skip for pagination.",
+                        "type": "integer"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "annotations": {
+                "readOnlyHint": true,
+                "openWorldHint": true,
+                "title": "Search Pics.io collections"
+            }
+        },
+        {
+            "name": "picsio_search_assets",
+            "description": "Search Pics.io assets with a rich set of filters (text, type, keywords/faces/people, flag/rating/color, file size, date ranges, collections) and sorting. Returns matching assets with id, name, file type, collections and a preview URL. For a topic, campaign, client, or event, call picsio_search_collections first, then pass matching collection ids here as collection_ids.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "description": "Free text query. Searches name, keywords, description and metadata by default.",
+                        "type": "string"
+                    },
+                    "search_in": {
+                        "description": "Restrict the free-text query to these fields. Default: all fields.",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "_all",
+                                "name",
+                                "title",
+                                "description",
+                                "keywords",
+                                "faces",
+                                "transcripts",
+                                "meta",
+                                "content"
+                            ]
+                        }
+                    },
+                    "collection_ids": {
+                        "description": "Restrict to these collection ids (searches sub-collections too unless recursive=false).",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "collection_id": {
+                        "description": "Single collection id (alias of collection_ids).",
+                        "type": "string"
+                    },
+                    "recursive": {
+                        "description": "Search sub-collections of the given collection(s). Default true.",
+                        "type": "boolean"
+                    },
+                    "lightboard_id": {
+                        "description": "Restrict to a lightboard id.",
+                        "type": "string"
+                    },
+                    "inbox_id": {
+                        "description": "Restrict to an inbox id.",
+                        "type": "string"
+                    },
+                    "type": {
+                        "description": "Asset type bucket.",
+                        "type": "string",
+                        "enum": [
+                            "images",
+                            "video",
+                            "audio",
+                            "audioAndVideo",
+                            "text",
+                            "pdf",
+                            "sketch",
+                            "raw",
+                            "photoshop",
+                            "office",
+                            "3d",
+                            "externalLink"
+                        ]
+                    },
+                    "mime_type": {
+                        "description": "Filter by mime type substring, e.g. \"image/jpeg\" or \"pdf\".",
+                        "type": "string"
+                    },
+                    "file_extension": {
+                        "description": "Filter by file extension, e.g. \"jpg\".",
+                        "type": "string"
+                    },
+                    "file_name": {
+                        "description": "Match assets whose file name contains this text.",
+                        "type": "string"
+                    },
+                    "title": {
+                        "description": "Match assets whose title contains this text.",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "Match assets whose description contains this text.",
+                        "type": "string"
+                    },
+                    "content": {
+                        "description": "Match assets whose extracted content (OCR / document text) contains this text.",
+                        "type": "string"
+                    },
+                    "keywords": {
+                        "description": "Keyword ids to filter by.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "keywords_match": {
+                        "description": "How to match keywords. Default oneOf.",
+                        "type": "string",
+                        "enum": [
+                            "oneOf",
+                            "allOf",
+                            "noneOf"
+                        ]
+                    },
+                    "faces": {
+                        "description": "Face / person ids to filter by.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "faces_match": {
+                        "description": "How to match faces. Default oneOf.",
+                        "type": "string",
+                        "enum": [
+                            "oneOf",
+                            "allOf",
+                            "noneOf"
+                        ]
+                    },
+                    "assignees": {
+                        "description": "Assigned user ids to filter by.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "assignees_match": {
+                        "description": "How to match assignees. Default oneOf.",
+                        "type": "string",
+                        "enum": [
+                            "oneOf",
+                            "allOf",
+                            "noneOf"
+                        ]
+                    },
+                    "created_by": {
+                        "description": "Filter by the user ids who uploaded the assets.",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "flag": {
+                        "description": "Filter by flag status.",
+                        "type": "string",
+                        "enum": [
+                            "flagged",
+                            "unflagged",
+                            "rejected"
+                        ]
+                    },
+                    "rating": {
+                        "description": "Star rating (1-5).",
+                        "type": "integer"
+                    },
+                    "rating_operator": {
+                        "description": "How to compare rating. Default equals.",
+                        "type": "string",
+                        "enum": [
+                            "equals",
+                            "gt",
+                            "lt"
+                        ]
+                    },
+                    "color": {
+                        "description": "Filter by color label(s).",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "yellow",
+                                "orange",
+                                "red",
+                                "green",
+                                "aqua",
+                                "blue",
+                                "purple",
+                                "nocolor"
+                            ]
+                        }
+                    },
+                    "file_size_min": {
+                        "description": "Minimum file size in bytes.",
+                        "type": "integer"
+                    },
+                    "file_size_max": {
+                        "description": "Maximum file size in bytes.",
+                        "type": "integer"
+                    },
+                    "created_after": {
+                        "description": "Only assets uploaded on/after this date (ISO 8601, e.g. \"2024-01-01\").",
+                        "type": "string"
+                    },
+                    "created_before": {
+                        "description": "Only assets uploaded on/before this date (ISO 8601).",
+                        "type": "string"
+                    },
+                    "updated_after": {
+                        "description": "Only assets modified on/after this date (ISO 8601).",
+                        "type": "string"
+                    },
+                    "updated_before": {
+                        "description": "Only assets modified on/before this date (ISO 8601).",
+                        "type": "string"
+                    },
+                    "trashed": {
+                        "description": "Search trashed assets instead of active ones.",
+                        "type": "boolean"
+                    },
+                    "include_archived": {
+                        "description": "Include archived assets in the results.",
+                        "type": "boolean"
+                    },
+                    "sort_by": {
+                        "description": "Sort field. \"score\" = relevance, \"uploadTime\"/\"updateTime\" = dates.",
+                        "type": "string",
+                        "enum": [
+                            "score",
+                            "alphabetical",
+                            "uploadTime",
+                            "updateTime",
+                            "rating",
+                            "color",
+                            "fileSize",
+                            "createTime",
+                            "fileType",
+                            "creator",
+                            "imageResolution"
+                        ]
+                    },
+                    "sort_order": {
+                        "description": "Sort direction. Default desc.",
+                        "type": "string",
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ]
+                    },
+                    "limit": {
+                        "description": "Max results to return (1-100).",
+                        "type": "integer"
+                    },
+                    "offset": {
+                        "description": "Number of results to skip for pagination.",
+                        "type": "integer"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "annotations": {
+                "readOnlyHint": true,
+                "openWorldHint": true,
+                "title": "Search Pics.io assets"
+            }
+        },
+        {
+            "name": "picsio_get_asset",
+            "description": "Retrieve detailed metadata for a single Pics.io asset by its id, including keywords, description, collections, dimensions and a preview URL.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "asset_id": {
+                        "description": "The Pics.io asset id.",
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "asset_id"
+                ]
+            },
+            "annotations": {
+                "readOnlyHint": true,
+                "openWorldHint": true,
+                "title": "Get Pics.io asset"
+            }
+        },
+        {
+            "name": "picsio_get_asset_preview",
+            "description": "Return a safe preview URL for an asset (images, video thumbnails, PDF). Large files and unsupported formats are rejected with an explanation.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "asset_id": {
+                        "description": "The Pics.io asset id.",
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "asset_id"
+                ]
+            },
+            "annotations": {
+                "readOnlyHint": true,
+                "openWorldHint": true,
+                "title": "Get Pics.io asset preview"
+            }
+        }
+    ]
+}

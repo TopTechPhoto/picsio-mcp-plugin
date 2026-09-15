@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.TopTechPhoto/picsio",
+  "title": "Pics.io",
+  "description": "Read-only access to a Pics.io digital asset library: search collections and assets with rich metadata filters, read full asset metadata, and fetch safe previews.",
+  "repository": {
+    "url": "https://github.com/TopTechPhoto/picsio-mcp-plugin",
+    "source": "github"
+  },
+  "websiteUrl": "https://pics.io",
+  "version": "0.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.pics.io/mcp"
+    }
+  ]
+}
