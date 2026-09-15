@@ -12,7 +12,6 @@
   "homepage": "https://pics.io",
   "repository": "https://github.com/TopTechPhoto/picsio-mcp-plugin",
   "license": "Apache-2.0",
-  "logo": "assets/logo.png",
   "keywords": [
     "picsio",
     "dam",

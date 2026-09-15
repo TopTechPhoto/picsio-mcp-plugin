@@ -13,6 +13,19 @@ refresh. No dependencies to install.
 node scripts/validate.mjs
 ```
 
+Before a submission — not on every change — also run the check the review
+pipeline runs:
+
+```bash
+claude plugin validate . --strict
+claude plugin validate .claude-plugin/plugin.json --strict
+```
+
+It isn't in CI because it needs the `claude` CLI installed and possibly
+authenticated. Note that Claude Code's plugin manifest schema has no `logo`
+field, so `.claude-plugin/plugin.json` deliberately omits one — the Codex and
+Cursor manifests carry it instead.
+
 ## The duplication rule
 
 `name`, `version`, `description` and the MCP URL appear in several manifests.
