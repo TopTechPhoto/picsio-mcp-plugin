@@ -196,24 +196,121 @@ individual tools prompt on demand" case.
 ## Step 9 — Test & launch
 
 Reviewers need a **fully populated** test account — an empty library reads as a
-broken connector. Prepare, then paste into the portal:
+broken connector. The demo account is `anthropic.example@pics.io`.
 
-- A demo Pics.io account's email and password, on a plan matching what real
-  users get.
-- A library with enough substance to exercise every tool: a nested collection
-  tree, assets with keywords, star ratings, flags and color labels, at least
-  one recognized face, a few PDFs or Office documents with extractable text,
-  and a mix of images and video.
-- Step-by-step access: sign-in URL, then "add `https://mcp.pics.io/mcp` as a
-  custom connector in Claude, click Connect, sign in with the credentials
-  above".
-- Two or three prompts that demonstrably return results in that account, so the
-  reviewer doesn't have to guess what to ask.
+Fill in the two placeholders (`<PASSWORD>` and the plan name) before pasting,
+and confirm the library really contains what the "What's in the account"
+section promises. A reviewer who follows these steps and gets an empty result
+set fails the submission, and the fix costs another round trip.
+
+**Test setup instructions** — plain text, ASCII only, paste as-is:
+
+```text
+TEST ACCOUNT
+
+  Email:    anthropic.example@pics.io
+  Password: <PASSWORD>
+  Plan:     <PLAN NAME - same feature set real users get>
+
+A standalone Pics.io team with a populated demo library, maintained for this
+review. Please tell us if anything in it looks stale or broken.
+
+
+WHAT'S IN THE ACCOUNT
+
+  - A nested collection tree several levels deep, so both collection search
+    and child listing return something.
+  - Assets carrying keywords, star ratings, flags, color labels and
+    descriptions, so the metadata filters are exercisable.
+  - At least one recognized face, for the people filters.
+  - PDFs and Office documents with extractable text, for content/OCR search.
+  - A mix of images and video, for the file-type filters and for previews.
+
+
+STEP 1 - SIGN IN TO PICS.IO FIRST
+
+  Go to https://pics.io/login and sign in with the credentials above.
+
+  Do this before connecting. The OAuth consent screen is served by Pics.io,
+  so a live session there turns the next step into a single click instead of
+  a sign-in inside the popup. Either path works.
+
+
+STEP 2 - ADD THE CONNECTOR
+
+  In Claude: Settings > Connectors > Add custom connector.
+  URL: https://mcp.pics.io/mcp
+
+  Claude discovers the OAuth configuration automatically and registers itself
+  through dynamic client registration. There is no client ID or secret to
+  enter.
+
+
+STEP 3 - CONNECT
+
+  Click Connect. A browser window opens on pics.io with a consent screen
+  listing four read-only scopes: assets_read, collections_read,
+  keywords_read, customFields_read. Approve it.
+
+  You are returned to Claude, the connector shows as connected, and four
+  tools become available.
+
+
+STEP 4 - EXERCISE EACH TOOL
+
+  Start a new chat and run these in order. Each step reuses the previous
+  step's output, so no collection or asset id has to be known in advance.
+
+  1. picsio_search_collections
+     "List the top-level collections in my Pics.io library."
+     Expect: several collections with ids, names and paths.
+
+  2. picsio_search_collections (scoped)
+     "Open the first one and show me what's inside it."
+     Expect: that collection's direct children.
+
+  3. picsio_search_assets
+     "Find images in that collection, newest first, and show their ratings
+      and keywords."
+     Expect: assets with ids, names, file types, collections and preview
+     URLs.
+
+  4. picsio_search_assets (filters)
+     "Now narrow that to 5-star images only."
+     Expect: a smaller, correctly filtered set - or a clear statement that
+     none match, which is also a correct result.
+
+  5. picsio_search_assets (document text)
+     "Search the whole library for PDFs whose text mentions 'pricing'."
+     Expect: matches found through extracted document text and OCR, not
+     through filenames.
+
+  6. picsio_get_asset
+     "Show me the full metadata for the first asset from step 3."
+     Expect: keywords, description, collections, dimensions, preview URL.
+
+  7. picsio_get_asset_preview
+     "Show me a preview of that asset."
+     Expect: a preview URL that renders. Oversized and unsupported files are
+     refused with an explanation rather than a generic error - that is
+     intended behavior, not a failure.
+
+
+NOTES FOR THE REVIEWER
+
+  - The connector is read-only. No tool uploads, tags, rates, moves, shares
+    or deletes anything, so nothing you do in this account can damage it.
+  - Every result is filtered by the signed-in user's own Pics.io permissions,
+    so a "not found" can legitimately mean "not visible to this account".
+  - To disconnect, remove the connector in Claude, or revoke access from
+    Pics.io account settings.
+  - Questions, or a test account that stops working: admin@toptechphoto.com
+```
 
 Before submitting, the portal asks you to confirm you've run every tool
 yourself — do that through
 [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) or as a
-custom connector in Claude.
+custom connector in Claude, against this same account.
 
 ## Step 10 — Compliance
 
@@ -236,7 +333,8 @@ behaviour without instructing Claude how to act.
 2. **Icon.** `assets/logo.png` is 196×196 — fine for a plugin card, likely
    undersized for a directory listing. Export the square mark at 512×512 from
    the brand kit; see [`../assets/README.md`](../assets/README.md).
-3. **Test account.** Create and populate it (Step 9). This is the most common
+3. **Test account.** `anthropic.example@pics.io` — create and populate it per
+   Step 9, and fill the password into the instructions. This is the most common
    reason a submission stalls.
 4. **Slug.** `picsio` is permanent once published. Confirm it with whoever owns
    the brand before you submit.
