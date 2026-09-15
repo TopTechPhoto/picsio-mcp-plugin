@@ -2,6 +2,11 @@
 
 Notes for maintainers. Nothing here is needed to *use* the plugin.
 
+This covers the **plugin** submission — the skills and commands in this
+repository. Listing the MCP server itself in the Connectors Directory is a
+separate submission with its own portal and its own prepared values; see
+[`connector-submission.md`](./connector-submission.md).
+
 ## Community, not official — there is no choice to make
 
 Anthropic runs two public marketplaces:

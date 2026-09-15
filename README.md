@@ -190,7 +190,7 @@ Worth stating plainly, because an assistant plugin runs with your data:
 | `commands/` | Claude Code slash commands |
 | `scripts/` | Maintenance scripts — manifest validation, Help Center index refresh |
 | `assets/` | Brand artwork referenced by the `logo` field and this README |
-| `docs/` | Notes for maintainers, including marketplace submission |
+| `docs/` | Maintainer notes — plugin marketplace and Connectors Directory submissions |
 | `LICENSE` / `NOTICE` | Apache-2.0 for this packaging; see `NOTICE` for the service |
 
 ## For maintainers
