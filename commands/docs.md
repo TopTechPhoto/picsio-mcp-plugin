@@ -14,4 +14,5 @@ Follow the `picsio-help-docs` skill:
    limits, and link every article you used with its real title.
 
 If the Help Center doesn't cover it, say so and point to the API docs at
-<https://api.pics.io> or to <support@pics.io>.
+<https://api.pics.io>, or to Pics.io support — the in-app chat or
+<admin@toptechphoto.com>.

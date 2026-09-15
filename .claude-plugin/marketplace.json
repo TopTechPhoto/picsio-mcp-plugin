@@ -2,7 +2,7 @@
   "name": "picsio",
   "owner": {
     "name": "TopTechPhoto",
-    "email": "support@pics.io",
+    "email": "admin@toptechphoto.com",
     "url": "https://pics.io"
   },
   "metadata": {
@@ -31,7 +31,7 @@
       ],
       "author": {
         "name": "TopTechPhoto",
-        "email": "support@pics.io",
+        "email": "admin@toptechphoto.com",
         "url": "https://pics.io"
       }
     }

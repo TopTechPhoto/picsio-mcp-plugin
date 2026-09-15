@@ -75,15 +75,19 @@ server and the docs site) and `may_download_additional_software` (false).
 
 ## Pre-submission checklist
 
-- [ ] `node scripts/validate.mjs` passes.
+- [x] `node scripts/validate.mjs` passes.
+- [x] `https://mcp.pics.io/mcp` answers OAuth discovery, advertising
+      `resource: https://mcp.pics.io/mcp` and the four read-only scopes.
+- [x] Version set and `CHANGELOG.md` written.
+- [x] `assets/logo.png` present and wired into the Claude, Codex and Cursor
+      manifests.
+- [x] Repository is public, with a description, homepage and topics set.
+- [x] Commit tagged so the pinned SHA has a human-readable name.
 - [ ] CI green on `master`, including the endpoint probe.
-- [ ] `https://mcp.pics.io/mcp` answers OAuth discovery and the OAuth flow
-      completes end to end in a real client.
-- [ ] Version bumped and `CHANGELOG.md` updated.
-- [ ] `assets/logo.svg` present and wired into the manifests.
+- [ ] OAuth flow completed end to end in a real client (Claude, then Codex).
 - [ ] README install steps verified by someone who has not installed it before.
-- [ ] Tag the commit (`git tag v0.1.0 && git push --tags`) so the pinned SHA has
-      a human-readable name.
+- [ ] `assets/logo.png` replaced with a 512×512 export from the brand kit —
+      see [`assets/README.md`](../assets/README.md).
 
 ## Other directories
 

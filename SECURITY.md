@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Email **support@pics.io** with `SECURITY` in the subject line, a description,
+Email **admin@toptechphoto.com** with `SECURITY` in the subject line, a description,
 the steps to reproduce, and the impact you believe it has. Please don't open a
 public issue for a security report.
 

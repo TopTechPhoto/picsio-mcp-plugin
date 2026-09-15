@@ -53,7 +53,7 @@ Useful next steps to offer, in this order:
 - The `picsio-asset-search` tools, if the question is really about their own
   library rather than the product.
 - The Pics.io API docs at <https://api.pics.io> for programmatic questions.
-- Pics.io support at <support@pics.io>, or the in-app chat.
+- Pics.io support — the in-app chat, or <admin@toptechphoto.com>.
 
 ## Scope notes
 

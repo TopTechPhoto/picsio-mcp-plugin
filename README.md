@@ -1,3 +1,5 @@
+<img src="./assets/logo.png" alt="Pics.io" width="72" align="right">
+
 # Pics.io plugin
 
 > Official plugin and extension distribution for the [Pics.io](https://pics.io)
@@ -139,7 +141,7 @@ token (**My Account → API → Personal token** in Pics.io) as a bearer header 
 ```
 
 Note the missing space after `Authorization:` — that's an `mcp-remote` quirk, not
-a typo. Contact [support@pics.io](mailto:support@pics.io) if you need this path.
+a typo. Contact [admin@toptechphoto.com](mailto:admin@toptechphoto.com) if you need this path.
 
 </details>
 
@@ -187,6 +189,7 @@ Worth stating plainly, because an assistant plugin runs with your data:
 | `skills/` | Skills installed with the plugin |
 | `commands/` | Claude Code slash commands |
 | `scripts/` | Maintenance scripts — manifest validation, Help Center index refresh |
+| `assets/` | Brand artwork referenced by the `logo` field and this README |
 | `docs/` | Notes for maintainers, including marketplace submission |
 | `LICENSE` / `NOTICE` | Apache-2.0 for this packaging; see `NOTICE` for the service |
 
@@ -209,7 +212,7 @@ seven files by design, and `validate.mjs` enforces that they stay identical.
 - API reference: <https://api.pics.io>
 - Privacy Policy: <https://pics.io/privacy-policy>
 - Terms of Use: <https://pics.io/terms-of-use>
-- Support: <support@pics.io>
+- Support: <admin@toptechphoto.com>
 
 ## License
 

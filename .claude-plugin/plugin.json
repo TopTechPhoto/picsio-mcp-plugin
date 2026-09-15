@@ -6,12 +6,13 @@
   "description": "Connect your AI assistant to your Pics.io digital asset library. Browse and search collections, find assets with rich filters — keywords, people, ratings, color labels, file types, dates — read full metadata, and pull safe previews, so answers are grounded in the approved files your team actually ships. Read-only.",
   "author": {
     "name": "TopTechPhoto",
-    "email": "support@pics.io",
+    "email": "admin@toptechphoto.com",
     "url": "https://pics.io"
   },
   "homepage": "https://pics.io",
   "repository": "https://github.com/TopTechPhoto/picsio-mcp-plugin",
   "license": "Apache-2.0",
+  "logo": "assets/logo.png",
   "keywords": [
     "picsio",
     "dam",
