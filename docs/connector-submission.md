@@ -65,7 +65,7 @@ asset library"* (41) or *"Find the approved file, not last year's version"* (47)
 >
 > Claude can browse and search your collection tree, then search assets across
 > roughly 35 filters — free text, asset type, file extension, keywords, faces,
-> assignees, uploader, star rating, flag state, colour label, file size, upload
+> assignees, uploader, star rating, flag state, color label, file size, upload
 > and modification dates, and text extracted from documents and images by OCR —
 > with sorting and paging. It can pull full metadata for a single asset and a
 > safe preview URL for images, video thumbnails and PDFs.
@@ -99,26 +99,50 @@ closest matches the portal actually offers.
 
 ## Step 5 — Use cases
 
-**Primary use cases**
+**Primary use cases** — plain text, ASCII only, paste as-is:
 
-1. **Pull the approved assets for a deliverable.** *"I'm building the Q4 partner
-   deck — find our current approved logo files and the hero photography from the
-   autumn campaign."* Finds the right collections first, then filters to
-   flagged and high-rated assets, so nothing off-brand or superseded gets used.
-2. **Answer "do we already have this?" before a shoot or a purchase.** *"Do we
-   have any 5-star product photos of the blue colourway from the last year?"*
-   One pass over the library with rating, collection and date filters — and an
-   honest "no" when the answer is no.
-3. **Audit what's actually in a collection.** *"What's in Campaigns / Autumn
-   2025, and how much of it is video?"* Useful before a handoff, a migration or
-   a rights review.
-4. **Find a file by something other than its name.** *"Which PDF in the Sales
-   collection mentions enterprise pricing?"* Searches OCR-extracted document
-   text, keywords, faces, assignees and custom metadata — what people actually
-   remember about a file once they've forgotten what it was called.
-5. **Keep an assistant's answers grounded in the real library.** Anything that
-   would otherwise be answered from a half-remembered filename or a guess now
-   resolves to a specific asset id with a preview link.
+```text
+Pics.io is a digital asset management system. This connector gives Claude
+read-only access to a team's asset library, so answers resolve to specific
+approved files instead of guesses.
+
+1. Pull the approved assets for a deliverable.
+   Example prompt: "I'm building the Q4 partner deck - find our current
+   approved logo files and the hero photography from the autumn campaign."
+   Claude locates the relevant collections first, then filters to flagged and
+   high-rated assets, so nothing off-brand or superseded ends up in the work.
+
+2. Answer "do we already have this?" before a shoot or a purchase.
+   Example prompt: "Do we have any 5-star product photos of the blue colorway
+   from the last year?"
+   One pass over the library combining rating, collection and date filters -
+   and an honest "no" when the library genuinely has nothing matching, which
+   is the answer that saves the money.
+
+3. Audit what a collection actually contains.
+   Example prompt: "What's in Campaigns / Autumn 2025, and how much of it is
+   video?"
+   Claude walks the collection tree and breaks the results down by file type,
+   rating and upload date. Useful before a handoff, a migration or a rights
+   review.
+
+4. Find a file by something other than its name.
+   Example prompt: "Which PDF in the Sales collection mentions enterprise
+   pricing?"
+   Searches text extracted from documents and images by OCR, plus keywords,
+   recognized faces, assignees and custom metadata - the things people
+   actually remember about a file after they have forgotten what it was
+   called.
+
+5. Keep the assistant's answers grounded in the real library.
+   Anything that would otherwise be answered from a half-remembered filename
+   resolves to a specific asset id with a preview link, scoped to what the
+   signed-in user is permitted to see.
+
+All five are read-only. The connector exposes no tool that uploads, tags,
+rates, moves, shares or deletes anything; users make changes in the Pics.io
+web app.
+```
 
 **What users need before connecting**
 
@@ -177,7 +201,7 @@ broken connector. Prepare, then paste into the portal:
 - A demo Pics.io account's email and password, on a plan matching what real
   users get.
 - A library with enough substance to exercise every tool: a nested collection
-  tree, assets with keywords, star ratings, flags and colour labels, at least
+  tree, assets with keywords, star ratings, flags and color labels, at least
   one recognized face, a few PDFs or Office documents with extractable text,
   and a mix of images and video.
 - Step-by-step access: sign-in URL, then "add `https://mcp.pics.io/mcp` as a

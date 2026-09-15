@@ -55,7 +55,7 @@ Finds the right collections first, then filters to flagged/high-rated assets and
 returns them with previews, so nothing off-brand or superseded gets used.
 
 **2. Answer "do we already have this?" before a shoot or a purchase.**
-> *"Do we have any 5-star product photos of the blue colourway from the last
+> *"Do we have any 5-star product photos of the blue colorway from the last
 > year?"*
 Combines rating, collection and date filters in one pass over the library —
 faster than browsing, and it reports honestly when the answer is no.
