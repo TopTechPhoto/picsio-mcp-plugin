@@ -181,7 +181,8 @@ any of them changes.
 | Directory | Manifest | How to submit |
 | --- | --- | --- |
 | Claude community marketplace | `.claude-plugin/` | The forms above |
-| Codex / ChatGPT apps | `.codex-plugin/`, `.agents/plugins/` | OpenAI's app submission flow |
+| Claude Connectors Directory | `.mcp.json` | [`connector-submission.md`](./connector-submission.md) |
+| ChatGPT / Codex | `plugin.json`, `.codex-plugin/`, `.agents/plugins/` | [`codex-submission.md`](./codex-submission.md) |
+| Gemini CLI gallery | `gemini-extension.json` | [`gemini-submission.md`](./gemini-submission.md) |
 | Cursor | `.cursor-plugin/` | Cursor's plugin submission |
-| Gemini CLI extensions | `gemini-extension.json` | Installable directly from the repo URL |
 | MCP Registry | `server.json` | `mcp-publisher` against <https://registry.modelcontextprotocol.io> |

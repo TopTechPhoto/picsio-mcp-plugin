@@ -176,10 +176,11 @@ Worth stating plainly, because an assistant plugin runs with your data:
 
 | Path | What it is |
 | --- | --- |
+| `plugin.json` | Portable [Agent Plugins](https://agent-plugins.org) manifest — Codex reads this first |
 | `.mcp.json` | Shared MCP server config — Claude Code and Codex read this |
 | `.claude-plugin/plugin.json` | Claude Code plugin manifest |
 | `.claude-plugin/marketplace.json` | Claude Code marketplace catalog |
-| `.codex-plugin/plugin.json` | Codex plugin manifest, including the app-store interface block |
+| `.codex-plugin/plugin.json` | Legacy Codex manifest, kept as a compatibility fallback |
 | `.agents/plugins/marketplace.json` | Codex marketplace catalog |
 | `.cursor-plugin/plugin.json` | Cursor plugin manifest |
 | `gemini-extension.json` | Gemini CLI extension manifest |
@@ -190,7 +191,7 @@ Worth stating plainly, because an assistant plugin runs with your data:
 | `commands/` | Claude Code slash commands |
 | `scripts/` | Maintenance scripts — manifest validation, Help Center index refresh |
 | `assets/` | Brand artwork referenced by the `logo` field and this README |
-| `docs/` | Maintainer notes — plugin marketplace and Connectors Directory submissions |
+| `docs/` | Maintainer notes — one file per directory submission |
 | `LICENSE` / `NOTICE` | Apache-2.0 for this packaging; see `NOTICE` for the service |
 
 ## For maintainers

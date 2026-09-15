@@ -22,8 +22,12 @@ First public release.
 - `picsio-help-docs` skill — locating and reading the right article from the
   Pics.io Help Center, with a bundled index generated from the site's sitemap.
 - `/picsio:find-assets` and `/picsio:docs` slash commands.
-- Brand artwork in `assets/`, wired into the `logo` field of the Claude, Codex
-  and Cursor manifests.
+- Brand artwork in `assets/`, wired into the `logo` field of the Codex and
+  Cursor manifests.
+- Portable [Agent Plugins 1.0.0](https://agent-plugins.org) manifest at
+  `plugin.json`, carrying OpenAI presentation metadata under
+  `extensions."com.openai"`. `.codex-plugin/plugin.json` stays as the
+  documented compatibility fallback.
 - `scripts/validate.mjs` manifest consistency checks and
   `scripts/update-help-index.sh`, both wired into CI alongside an MCP endpoint
   liveness probe.

@@ -26,6 +26,7 @@ const MCP_URL = 'https://mcp.pics.io/mcp';
 const PLUGIN_NAME = 'picsio';
 
 const manifests = {
+  portablePlugin: readJson('plugin.json'),
   claudePlugin: readJson('.claude-plugin/plugin.json'),
   claudeMarketplace: readJson('.claude-plugin/marketplace.json'),
   codexPlugin: readJson('.codex-plugin/plugin.json'),
@@ -46,6 +47,7 @@ if (!/^\d+\.\d+\.\d+$/.test(version)) {
   fail(`.claude-plugin/plugin.json: version "${version}" is not semver`);
 }
 const versioned = {
+  'plugin.json': manifests.portablePlugin.version,
   '.claude-plugin/marketplace.json (metadata)': manifests.claudeMarketplace.metadata?.version,
   '.claude-plugin/marketplace.json (plugin)': manifests.claudeMarketplace.plugins?.[0]?.version,
   '.codex-plugin/plugin.json': manifests.codexPlugin.version,
@@ -61,6 +63,7 @@ for (const [where, v] of Object.entries(versioned)) {
 // --- names line up ---------------------------------------------------------
 
 const named = {
+  'plugin.json': manifests.portablePlugin.name,
   '.claude-plugin/plugin.json': manifests.claudePlugin.name,
   '.claude-plugin/marketplace.json': manifests.claudeMarketplace.name,
   '.claude-plugin/marketplace.json (plugin)': manifests.claudeMarketplace.plugins?.[0]?.name,
@@ -93,7 +96,10 @@ if (manifests.mcp.mcpServers?.[PLUGIN_NAME]?.type !== 'http') {
 // --- the shared description is identical everywhere ------------------------
 
 const description = manifests.claudePlugin.description;
+const openaiInterface = manifests.portablePlugin.extensions?.['com.openai']?.interface;
 const described = {
+  'plugin.json': manifests.portablePlugin.description,
+  'plugin.json (com.openai longDescription)': openaiInterface?.longDescription,
   '.claude-plugin/marketplace.json (metadata)': manifests.claudeMarketplace.metadata?.description,
   '.claude-plugin/marketplace.json (plugin)': manifests.claudeMarketplace.plugins?.[0]?.description,
   '.codex-plugin/plugin.json': manifests.codexPlugin.description,
@@ -103,6 +109,28 @@ const described = {
 };
 for (const [where, d] of Object.entries(described)) {
   if (d !== description) fail(`${where}: description differs from .claude-plugin/plugin.json`);
+}
+
+// --- the portable manifest stays inside its (closed) schema ---------------
+
+const PORTABLE_KEYS = new Set(['$schema', 'name', 'version', 'description', 'author',
+  'homepage', 'repository', 'license', 'keywords', 'extensions']);
+for (const key of Object.keys(manifests.portablePlugin)) {
+  if (!PORTABLE_KEYS.has(key)) {
+    fail(`plugin.json: "${key}" is not in the Agent Plugins 1.0.0 schema, which sets additionalProperties:false`);
+  }
+}
+if (manifests.portablePlugin.$schema !== 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json') {
+  fail('plugin.json: $schema must be the Agent Plugins 1.0.0 identifier');
+}
+// Components are discovered at their default locations rather than declared.
+for (const conventional of ['skills', '.mcp.json']) {
+  if (!existsSync(join(root, conventional))) {
+    fail(`plugin.json relies on ${conventional} at the plugin root, which is missing`);
+  }
+}
+if (openaiInterface?.logo && !existsSync(join(root, openaiInterface.logo))) {
+  fail(`plugin.json: com.openai logo points at missing path "${openaiInterface.logo}"`);
 }
 
 // --- manifest file references resolve --------------------------------------

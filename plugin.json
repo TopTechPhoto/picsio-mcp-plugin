@@ -1,0 +1,48 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "picsio",
+  "version": "0.1.0",
+  "description": "Connect your AI assistant to your Pics.io digital asset library. Browse and search collections, find assets with rich filters — keywords, people, ratings, color labels, file types, dates — read full metadata, and pull safe previews, so answers are grounded in the approved files your team actually ships. Read-only.",
+  "author": {
+    "name": "TopTechPhoto",
+    "email": "admin@toptechphoto.com",
+    "url": "https://pics.io"
+  },
+  "homepage": "https://pics.io",
+  "repository": "https://github.com/TopTechPhoto/picsio-mcp-plugin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "picsio",
+    "dam",
+    "digital-asset-management",
+    "media-library",
+    "brand-assets",
+    "creative-operations",
+    "mcp"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Pics.io",
+        "shortDescription": "Search your Pics.io asset library",
+        "longDescription": "Connect your AI assistant to your Pics.io digital asset library. Browse and search collections, find assets with rich filters — keywords, people, ratings, color labels, file types, dates — read full metadata, and pull safe previews, so answers are grounded in the approved files your team actually ships. Read-only.",
+        "developerName": "TopTechPhoto",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Search"
+        ],
+        "websiteURL": "https://pics.io",
+        "privacyPolicyURL": "https://pics.io/privacy-policy",
+        "termsOfServiceURL": "https://pics.io/terms-of-use",
+        "defaultPrompt": [
+          "Which Pics.io collections hold our approved brand logos?",
+          "Find the hero images from our last product launch in Pics.io.",
+          "Show me every 5-star photo in Pics.io tagged for the autumn campaign."
+        ],
+        "brandColor": "#FFCC00",
+        "logo": "assets/logo.png"
+      }
+    }
+  }
+}
