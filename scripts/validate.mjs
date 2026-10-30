@@ -22,9 +22,11 @@ const readJson = (rel) => {
   }
 };
 
-const MCP_URL = 'https://mcp.pics.io/mcp';
+const DEFAULT_MCP_URL = 'https://mcp.pics.io/mcp';
+const MCP_URL = process.env.MCP_URL || DEFAULT_MCP_URL;
 const PLUGIN_NAME = 'picsio';
 const OPENAI_PLUGIN_NAME = process.env.OPENAI_PLUGIN_NAME || PLUGIN_NAME;
+const OPENAI_SUPPORT_URL = 'https://help.pics.io/en/';
 
 const manifests = {
   portablePlugin: readJson('plugin.json'),
@@ -39,6 +41,15 @@ const manifests = {
   server: readJson('server.json'),
   tools: readJson('mcp-manifest.json'),
 };
+
+try {
+  const mcpUrl = new URL(MCP_URL);
+  if (mcpUrl.protocol !== 'https:' || mcpUrl.username || mcpUrl.password || mcpUrl.hash) {
+    fail('MCP_URL must be an HTTPS URL without credentials or a fragment');
+  }
+} catch {
+  fail(`MCP_URL "${MCP_URL}" is not a valid URL`);
+}
 
 if (problems.length) report();
 
@@ -113,6 +124,7 @@ if (portableAuth !== undefined) {
 
 const description = manifests.claudePlugin.description;
 const openaiInterface = manifests.portablePlugin.extensions?.['com.openai']?.interface;
+const codexInterface = manifests.codexPlugin.interface;
 const described = {
   'plugin.json': manifests.portablePlugin.description,
   'plugin.json (com.openai longDescription)': openaiInterface?.longDescription,
@@ -125,6 +137,53 @@ const described = {
 };
 for (const [where, d] of Object.entries(described)) {
   if (d !== description) fail(`${where}: description differs from .claude-plugin/plugin.json`);
+}
+
+// --- OpenAI directory metadata meets submission constraints ----------------
+
+for (const [where, value] of [
+  ['plugin.json', openaiInterface?.shortDescription],
+  ['.codex-plugin/plugin.json', codexInterface?.shortDescription],
+]) {
+  if (typeof value !== 'string' || value.length === 0 || value.length > 30) {
+    fail(`${where}: shortDescription must contain 1-30 characters`);
+  }
+}
+if (openaiInterface?.shortDescription !== codexInterface?.shortDescription) {
+  fail('OpenAI shortDescription differs between plugin manifests');
+}
+for (const [where, value] of [
+  ['plugin.json', openaiInterface?.supportURL],
+  ['.codex-plugin/plugin.json', codexInterface?.supportURL],
+]) {
+  if (value !== OPENAI_SUPPORT_URL) {
+    fail(`${where}: supportURL must be "${OPENAI_SUPPORT_URL}"`);
+  }
+}
+
+const relativeLuminance = (hex) => {
+  if (!/^#[0-9a-f]{6}$/i.test(hex ?? '')) return null;
+  const channels = hex.slice(1).match(/../g).map((value) => parseInt(value, 16) / 255);
+  const linear = channels.map((value) =>
+    value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+};
+const contrastRatio = (foreground, background) => {
+  const first = relativeLuminance(foreground);
+  const second = relativeLuminance(background);
+  if (first === null || second === null) return 0;
+  return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+};
+for (const [where, metadata] of [
+  ['plugin.json', openaiInterface],
+  ['.codex-plugin/plugin.json', codexInterface],
+]) {
+  if (contrastRatio(metadata?.brandColor, '#FFFFFF') < 2) {
+    fail(`${where}: brandColor must have at least 2:1 contrast against white`);
+  }
+  if (metadata?.brandColorDark && contrastRatio(metadata.brandColorDark, '#212121') < 2) {
+    fail(`${where}: brandColorDark must have at least 2:1 contrast against #212121`);
+  }
 }
 
 // --- the portable manifest stays inside its (closed) schema ---------------
@@ -145,8 +204,11 @@ for (const conventional of ['skills', 'mcp.json']) {
     fail(`plugin.json relies on ${conventional} at the plugin root, which is missing`);
   }
 }
-if (openaiInterface?.logo && !existsSync(join(root, openaiInterface.logo))) {
-  fail(`plugin.json: com.openai logo points at missing path "${openaiInterface.logo}"`);
+for (const key of ['logo', 'composerIcon']) {
+  const value = openaiInterface?.[key];
+  if (!value || !existsSync(join(root, value))) {
+    fail(`plugin.json: com.openai ${key} points at a missing path`);
+  }
 }
 
 // --- manifest file references resolve --------------------------------------
@@ -161,6 +223,12 @@ for (const [where, manifest] of [
     if (typeof value === 'string' && !existsSync(join(root, value))) {
       fail(`${where}: ${key} points at missing path "${value}"`);
     }
+  }
+}
+for (const key of ['logo', 'composerIcon']) {
+  const value = codexInterface?.[key];
+  if (!value || !existsSync(join(root, value))) {
+    fail(`.codex-plugin/plugin.json: interface.${key} points at a missing path`);
   }
 }
 if (!existsSync(join(root, manifests.gemini.contextFileName ?? ''))) {

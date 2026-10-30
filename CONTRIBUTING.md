@@ -29,9 +29,10 @@ Cursor manifests carry it instead.
 ## The duplication rule
 
 `version`, `description` and the MCP URL appear in several manifests. They must
-stay synchronized. Source manifests use `picsio` as the package name. For an
-update to an existing OpenAI plugin, the release workflow can replace only the
-root `plugin.json` name with the app ID supplied through `plugin_name`.
+stay synchronized. Source manifests use `picsio` as the package name and
+`https://mcp.pics.io/mcp` as the MCP URL. For an update to an existing OpenAI
+plugin, a manual release workflow run can replace the root `plugin.json` name
+through `plugin_name` and all packaged MCP URLs through `mcp_url`.
 
 When you change shared metadata manually, update every source file in the same
 commit:

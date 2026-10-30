@@ -17,15 +17,18 @@ versioned contract.
 | Portable MCP file | `mcp.json` |
 | Codex compatibility MCP file | `.mcp.json` |
 | MCP server name | `picsio` |
-| MCP URL | `https://mcp.pics.io/mcp` |
+| Default MCP URL | `https://mcp.pics.io/mcp` |
+| MCP URL override | An HTTPS URL supplied through the workflow's `mcp_url` input |
 | Authentication | Configure or reuse it in OpenAI Platform; omit ZIP auth overrides |
 | Release tag format | Bare semantic version, for example `1.0.2` |
 | Release asset | `<plugin_name>-codex-plugin-<version>.zip` |
 
-Source manifests use `picsio`. Automatic release builds also use `picsio`,
-which is suitable for creating a new plugin. When updating an existing plugin,
-run the workflow manually and set `plugin_name` to the exact app ID required by
-OpenAI Platform. Other ecosystem manifests always remain `picsio`.
+Source manifests use `picsio`. Automatic release builds also use `picsio` and
+the default MCP URL, which is suitable for creating a new plugin. When updating
+an existing plugin, run the workflow manually and set `plugin_name` to the exact
+app ID required by OpenAI Platform. Set `mcp_url` only when that package must
+connect to a different MCP endpoint. Other ecosystem manifest names always
+remain `picsio`.
 
 Do not remove either MCP file:
 
@@ -94,6 +97,8 @@ The workflow uses Node.js 26 on `ubuntu-latest` and performs these checks:
 - the tag is a bare `MAJOR.MINOR.PATCH` version;
 - the package name is `picsio` by default or the valid `plugin_name` supplied
   to a manual run;
+- the MCP endpoint is the default URL or the valid HTTPS `mcp_url` supplied to
+  a manual run, synchronized across every packaged manifest;
 - all version-bearing manifests are updated to the tag;
 - `node scripts/validate.mjs` passes after the update;
 - neither MCP file contains an auth override, fixed credentials, or headers;
@@ -112,7 +117,9 @@ Use this when a release exists but its ZIP is missing or failed validation.
 3. Enter the existing bare release tag, for example `1.0.1`.
 4. For a new plugin, leave `plugin_name` as `picsio`. For an update, enter the
    existing plugin's exact assigned app ID.
-5. Run the workflow.
+5. Leave `mcp_url` at `https://mcp.pics.io/mcp`, or enter the custom HTTPS MCP
+   endpoint that should be written to every manifest in this ZIP.
+6. Run the workflow.
 
 The upload uses `--clobber`, so rerunning replaces an asset with the same name.
 The GitHub release must already exist. Manual runs package the latest default

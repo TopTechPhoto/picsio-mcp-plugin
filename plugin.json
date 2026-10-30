@@ -24,7 +24,7 @@
     "com.openai": {
       "interface": {
         "displayName": "Pics.io",
-        "shortDescription": "Search your Pics.io asset library",
+        "shortDescription": "Search your Pics.io library",
         "longDescription": "Connect your AI assistant to your Pics.io digital asset library. Browse and search collections, find assets with rich filters — keywords, people, ratings, color labels, file types, dates — read full metadata, and pull safe previews, so answers are grounded in the approved files your team actually ships. Read-only.",
         "developerName": "TopTechPhoto",
         "category": "Productivity",
@@ -33,6 +33,7 @@
           "Search"
         ],
         "websiteURL": "https://pics.io",
+        "supportURL": "https://help.pics.io/en/",
         "privacyPolicyURL": "https://pics.io/privacy-policy",
         "termsOfServiceURL": "https://pics.io/terms-of-use",
         "defaultPrompt": [
@@ -40,8 +41,10 @@
           "Find the hero images from our last product launch in Pics.io.",
           "Show me every 5-star photo in Pics.io tagged for the autumn campaign."
         ],
-        "brandColor": "#FFCC00",
-        "logo": "assets/logo.png"
+        "brandColor": "#C49D00",
+        "brandColorDark": "#FFCC00",
+        "composerIcon": "./assets/logo.png",
+        "logo": "./assets/logo.png"
       }
     }
   }

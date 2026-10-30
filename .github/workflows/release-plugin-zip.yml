@@ -14,6 +14,11 @@ on:
         required: false
         default: picsio
         type: string
+      mcp_url:
+        description: MCP server URL to package
+        required: false
+        default: https://mcp.pics.io/mcp
+        type: string
 
 permissions:
   contents: write
@@ -26,6 +31,7 @@ jobs:
     env:
       RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
       PACKAGE_PLUGIN_NAME: ${{ inputs.plugin_name || 'picsio' }}
+      PACKAGE_MCP_URL: ${{ inputs.mcp_url || 'https://mcp.pics.io/mcp' }}
 
     steps:
       - name: Check out release source
@@ -46,6 +52,7 @@ jobs:
 
           version="$RELEASE_TAG"
           package_plugin_name="$PACKAGE_PLUGIN_NAME"
+          mcp_url="$PACKAGE_MCP_URL"
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Release tag $version must be a bare semantic version such as 1.0.1"
             exit 1
@@ -53,6 +60,13 @@ jobs:
           if (( ${#package_plugin_name} > 64 )) || \
             [[ ! "$package_plugin_name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
             echo "::error::Plugin name must use lowercase letters, numbers, and single hyphens"
+            exit 1
+          fi
+          if ! MCP_URL_TO_VALIDATE="$mcp_url" node -e '
+            const url = new URL(process.env.MCP_URL_TO_VALIDATE);
+            if (url.protocol !== "https:" || url.username || url.password || url.hash) process.exit(1);
+          '; then
+            echo "::error::MCP URL must be an HTTPS URL without credentials or a fragment"
             exit 1
           fi
 
@@ -63,6 +77,7 @@ jobs:
             jq \
               --arg version "$version" \
               --arg plugin_name "$package_plugin_name" \
+              --arg mcp_url "$mcp_url" \
               "$filter" "$file" > "$temporary"
             mv "$temporary" "$file"
           }
@@ -72,10 +87,14 @@ jobs:
           update_manifest .claude-plugin/marketplace.json \
             '.metadata.version = $version | .plugins[0].version = $version'
           update_manifest .codex-plugin/plugin.json '.version = $version'
-          update_manifest .cursor-plugin/plugin.json '.version = $version'
-          update_manifest gemini-extension.json '.version = $version'
+          update_manifest .mcp.json '.mcpServers.picsio.url = $mcp_url'
+          update_manifest .cursor-plugin/plugin.json \
+            '.version = $version | .mcpServers.picsio.url = $mcp_url'
+          update_manifest gemini-extension.json \
+            '.version = $version | .mcpServers.picsio.httpUrl = $mcp_url'
           update_manifest mcp-manifest.json '.version = $version'
-          update_manifest server.json '.version = $version'
+          update_manifest server.json \
+            '.version = $version | .remotes[0].url = $mcp_url'
 
           # Backfill releases tagged before the portable MCP manifest was added.
           if [[ ! -f mcp.json ]]; then
@@ -88,9 +107,11 @@ jobs:
                 }
               }
             }' .mcp.json > mcp.json
+          else
+            update_manifest mcp.json '.mcpServers.picsio.url = $mcp_url'
           fi
 
-          OPENAI_PLUGIN_NAME="$package_plugin_name" node scripts/validate.mjs
+          MCP_URL="$mcp_url" OPENAI_PLUGIN_NAME="$package_plugin_name" node scripts/validate.mjs
 
           if jq -e '
             .. | objects | to_entries[]? |
@@ -121,6 +142,7 @@ jobs:
           mkdir -p dist
           git add -- \
             plugin.json \
+            .mcp.json \
             .claude-plugin/plugin.json \
             .claude-plugin/marketplace.json \
             .codex-plugin/plugin.json \
