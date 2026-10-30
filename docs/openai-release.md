@@ -20,7 +20,7 @@ versioned contract.
 | MCP URL | `https://mcp.pics.io/mcp` |
 | Authentication | Configure or reuse it in OpenAI Platform; omit ZIP auth overrides |
 | Release tag format | Bare semantic version, for example `1.0.2` |
-| Release asset | `picsio-codex-plugin-<version>.zip` |
+| Release asset | `<plugin_name>-codex-plugin-<version>.zip` |
 
 Source manifests use `picsio`. Automatic release builds also use `picsio`,
 which is suitable for creating a new plugin. When updating an existing plugin,
@@ -86,6 +86,8 @@ archives that staged tree. It does not commit build-time changes to `master`.
 4. Open **Actions → Release plugin ZIP** and wait for the run to finish. A
    release event uses the default package name `picsio`.
 5. Download `picsio-codex-plugin-1.0.2.zip` from the GitHub release assets.
+   An override build uses its selected name, for example
+   `app-example-codex-plugin-1.0.2.zip`.
 
 The workflow uses Node.js 26 on `ubuntu-latest` and performs these checks:
 
@@ -137,7 +139,8 @@ the older tag's source.
 2. Run **Release plugin ZIP** manually with the release tag and that exact value
    in `plugin_name`.
 3. Open the existing plugin and choose **Upload new version**.
-4. Upload the regenerated ZIP and confirm the existing MCP connection remains.
+4. Upload `<assigned-app-id>-codex-plugin-<version>.zip` and confirm the
+   existing MCP connection remains.
 5. Reconnect only when changing authentication in OpenAI Platform, then rescan.
 
 Changing the MCP server origin is not a normal package update. Contact OpenAI
