@@ -177,7 +177,8 @@ Worth stating plainly, because an assistant plugin runs with your data:
 | Path | What it is |
 | --- | --- |
 | `plugin.json` | Portable [Agent Plugins](https://agent-plugins.org) manifest — Codex reads this first |
-| `.mcp.json` | Shared MCP server config — Claude Code and Codex read this |
+| `mcp.json` | Portable MCP declaration used by OpenAI package ingestion, including OAuth DCR settings |
+| `.mcp.json` | Codex compatibility MCP declaration referenced by `.codex-plugin/plugin.json` |
 | `.claude-plugin/plugin.json` | Claude Code plugin manifest |
 | `.claude-plugin/marketplace.json` | Claude Code marketplace catalog |
 | `.codex-plugin/plugin.json` | Legacy Codex manifest, kept as a compatibility fallback |
@@ -203,8 +204,14 @@ node scripts/validate.mjs        # manifests, skills, commands, tool references
 
 Both run in CI on every pull request, plus weekly to catch the endpoint
 disappearing. See [CONTRIBUTING.md](./CONTRIBUTING.md) before changing a
-manifest — the version, name, description and MCP URL are duplicated across
-seven files by design, and `validate.mjs` enforces that they stay identical.
+manifest — shared versions, descriptions, and MCP settings are duplicated by
+design. `validate.mjs` keeps them synchronized and enforces the separate
+OpenAI-assigned package ID.
+
+For OpenAI/Codex ZIP releases, follow
+[`docs/openai-release.md`](./docs/openai-release.md). It documents the assigned
+plugin ID, both MCP manifests, release-tag versioning, automated ZIP build,
+submission steps, and common validation failures.
 
 ## Links
 

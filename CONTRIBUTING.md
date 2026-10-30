@@ -6,7 +6,7 @@ before you push.
 
 ## Setup
 
-Node 20+ for the validator, `curl` and `python3` for the Help Center index
+Node 26 for the validator, `curl` and `python3` for the Help Center index
 refresh. No dependencies to install.
 
 ```bash
@@ -28,15 +28,20 @@ Cursor manifests carry it instead.
 
 ## The duplication rule
 
-`name`, `version`, `description` and the MCP URL appear in several manifests.
-They must be **byte-identical** everywhere. When you change one, change them
-all in the same commit:
+`version`, `description` and the MCP URL appear in several manifests. They must
+stay synchronized. The package name has one intentional exception: root
+`plugin.json` uses OpenAI's assigned ID
+`app-6ab67f879bfc81919e4ffcd24759c639`; the other ecosystems use `picsio`.
+The validator enforces both values.
+
+When you change shared metadata manually, update every source file in the same
+commit:
 
 | Change | Files to touch |
 | --- | --- |
-| Version bump | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both places), `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `gemini-extension.json`, `server.json`, `mcp-manifest.json` |
+| Version bump | `plugin.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both places), `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `gemini-extension.json`, `server.json`, `mcp-manifest.json` |
 | Description | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both places), `.codex-plugin/plugin.json` (`description` and `interface.longDescription`), `.cursor-plugin/plugin.json`, `gemini-extension.json` |
-| MCP URL | `.mcp.json`, `.cursor-plugin/plugin.json`, `gemini-extension.json` (`httpUrl`), `server.json` (`remotes[0].url`) |
+| MCP URL | `mcp.json`, `.mcp.json`, `.cursor-plugin/plugin.json`, `gemini-extension.json` (`httpUrl`), `server.json` (`remotes[0].url`) |
 
 The validator fails the build on any mismatch, so you'll find out either way —
 but finding out locally is faster.
@@ -44,6 +49,11 @@ but finding out locally is faster.
 Versioning is [semver](https://semver.org/): patch for wording and fixes, minor
 for a new skill or command, major for a breaking change to the tool surface.
 Add an entry to [`CHANGELOG.md`](./CHANGELOG.md) with every release.
+
+OpenAI/Codex release ZIPs use the GitHub release tag as their version and are
+built by CI. Follow [`docs/openai-release.md`](./docs/openai-release.md); do not
+hand-build the public ZIP. Keep both `mcp.json` and `.mcp.json`, and never add
+OAuth client credentials to either file.
 
 ## Adding a skill
 

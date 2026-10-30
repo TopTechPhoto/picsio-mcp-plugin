@@ -2,6 +2,10 @@
 
 Portal: <https://platform.openai.com/plugins>
 
+Build and update procedure:
+[`openai-release.md`](./openai-release.md). Use that guide for every new ZIP;
+this document focuses on the submission form and review content.
+
 Approved plugins land in the **universal Plugins Directory shared by ChatGPT
 and Codex** — one submission covers both surfaces. Submitting starts a review;
 it does not publish. After OpenAI approves, you publish from the portal
@@ -23,16 +27,18 @@ Budget more time for it than for the Claude or Gemini listings.
 
 ## Manifests in this repository
 
-Codex reads two, and both are already here:
+The portable package and Codex compatibility layer use these files:
 
 | File | Role |
 | --- | --- |
 | [`plugin.json`](../plugin.json) | The portable **Agent Plugins 1.0.0** manifest at the plugin root. Primary. OpenAI-specific presentation lives under `extensions."com.openai".interface`. |
+| [`mcp.json`](../mcp.json) | Portable MCP declaration. Preserves the `picsio` server connection and OAuth DCR configuration for OpenAI package ingestion. |
 | [`.codex-plugin/plugin.json`](../.codex-plugin/plugin.json) | The legacy overlay, explicitly supported as a **compatibility fallback** — read only when the root manifest has no `extensions."com.openai"`. Kept for older Codex builds. |
+| [`.mcp.json`](../.mcp.json) | Codex compatibility MCP declaration referenced by the legacy overlay. |
 
 The portable schema is closed (`additionalProperties: false`) and has no
 `skills`, `mcpServers` or `logo` keys — those components are found at their
-default locations (`skills/`, `.mcp.json` at the plugin root), which is why
+default locations (`skills/`, `mcp.json` at the plugin root), which is why
 `plugin.json` doesn't declare them. `scripts/validate.mjs` enforces both the
 closed key set and the presence of those default paths.
 
