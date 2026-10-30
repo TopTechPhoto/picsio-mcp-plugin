@@ -82,7 +82,7 @@ jobs:
           set -euo pipefail
 
           version="$(jq -r '.version' plugin.json)"
-          zip_name="picsio-mcp-plugin-${version}.zip"
+          zip_name="picsio-codex-plugin-${version}.zip"
           zip_path="dist/${zip_name}"
 
           mkdir -p dist

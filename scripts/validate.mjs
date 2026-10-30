@@ -24,6 +24,7 @@ const readJson = (rel) => {
 
 const MCP_URL = 'https://mcp.pics.io/mcp';
 const PLUGIN_NAME = 'picsio';
+const OPENAI_PLUGIN_NAME = 'app-6ab67f879bfc81919e4ffcd24759c639';
 
 const manifests = {
   portablePlugin: readJson('plugin.json'),
@@ -63,7 +64,6 @@ for (const [where, v] of Object.entries(versioned)) {
 // --- names line up ---------------------------------------------------------
 
 const named = {
-  'plugin.json': manifests.portablePlugin.name,
   '.claude-plugin/plugin.json': manifests.claudePlugin.name,
   '.claude-plugin/marketplace.json': manifests.claudeMarketplace.name,
   '.claude-plugin/marketplace.json (plugin)': manifests.claudeMarketplace.plugins?.[0]?.name,
@@ -76,6 +76,9 @@ const named = {
 };
 for (const [where, n] of Object.entries(named)) {
   if (n !== PLUGIN_NAME) fail(`${where}: name "${n}" != "${PLUGIN_NAME}"`);
+}
+if (manifests.portablePlugin.name !== OPENAI_PLUGIN_NAME) {
+  fail(`plugin.json: name "${manifests.portablePlugin.name}" != "${OPENAI_PLUGIN_NAME}"`);
 }
 
 // --- every manifest points at the same server ------------------------------
