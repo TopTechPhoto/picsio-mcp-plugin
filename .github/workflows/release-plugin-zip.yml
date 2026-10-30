@@ -3,6 +3,12 @@ name: Release plugin ZIP
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to rebuild and update
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -12,12 +18,14 @@ jobs:
     name: Build and attach plugin ZIP
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
     steps:
       - name: Check out the release tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
           fetch-depth: 0
 
       - name: Set up Node.js
@@ -25,19 +33,36 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Validate release metadata and plugin files
+      - name: Set release version and validate plugin files
         shell: bash
         run: |
           set -euo pipefail
 
-          node scripts/validate.mjs
-
-          version="$(jq -r '.version' plugin.json)"
-          tag="${{ github.event.release.tag_name }}"
-          if [[ "$tag" != "$version" ]]; then
-            echo "::error::Release tag $tag must match plugin.json version $version"
+          version="$RELEASE_TAG"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tag $version must be a bare semantic version such as 1.0.1"
             exit 1
           fi
+
+          update_version() {
+            local file="$1"
+            local filter="$2"
+            local temporary="${file}.tmp"
+            jq --arg version "$version" "$filter" "$file" > "$temporary"
+            mv "$temporary" "$file"
+          }
+
+          update_version plugin.json '.version = $version'
+          update_version .claude-plugin/plugin.json '.version = $version'
+          update_version .claude-plugin/marketplace.json \
+            '.metadata.version = $version | .plugins[0].version = $version'
+          update_version .codex-plugin/plugin.json '.version = $version'
+          update_version .cursor-plugin/plugin.json '.version = $version'
+          update_version gemini-extension.json '.version = $version'
+          update_version mcp-manifest.json '.version = $version'
+          update_version server.json '.version = $version'
+
+          node scripts/validate.mjs
 
           if jq -e '
             .. | objects | to_entries[]? |
@@ -61,7 +86,17 @@ jobs:
           zip_path="dist/${zip_name}"
 
           mkdir -p dist
-          git archive --format=zip --output="$zip_path" HEAD
+          git add -- \
+            plugin.json \
+            .claude-plugin/plugin.json \
+            .claude-plugin/marketplace.json \
+            .codex-plugin/plugin.json \
+            .cursor-plugin/plugin.json \
+            gemini-extension.json \
+            mcp-manifest.json \
+            server.json
+          release_tree="$(git write-tree)"
+          git archive --format=zip --output="$zip_path" "$release_tree"
           unzip -t "$zip_path"
 
           entries="$(unzip -Z1 "$zip_path")"
@@ -102,6 +137,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload \
-            "${{ github.event.release.tag_name }}" \
+            "$RELEASE_TAG" \
             "${{ steps.package.outputs.zip_path }}" \
             --clobber
