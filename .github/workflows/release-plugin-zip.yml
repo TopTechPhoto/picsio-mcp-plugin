@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag to rebuild and update
-        required: true
+        description: Optional bare semver tag; leave blank to create the next patch tag on master
+        required: false
         type: string
       plugin_name:
         description: Package name for plugin.json; use an assigned app ID only when updating an existing plugin
@@ -23,13 +23,17 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-plugin-zip
+  cancel-in-progress: false
+
 jobs:
   package:
     name: Build and attach plugin ZIP
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      REQUESTED_TAG: ${{ github.event.release.tag_name || inputs.tag }}
       PACKAGE_PLUGIN_NAME: ${{ inputs.plugin_name || 'picsio' }}
       PACKAGE_MCP_URL: ${{ inputs.mcp_url || 'https://mcp.pics.io/mcp' }}
 
@@ -37,8 +41,56 @@ jobs:
       - name: Check out release source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.event.release.tag_name }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'master' || github.event.release.tag_name }}
           fetch-depth: 0
+
+      - name: Resolve tag and ensure GitHub release exists
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          tag="${REQUESTED_TAG:-}"
+          if [[ -z "$tag" ]]; then
+            latest_version="$({
+              git tag --list | sed -nE 's/^v?([0-9]+\.[0-9]+\.[0-9]+)$/\1/p'
+              jq -r '.version' plugin.json
+            } | sort -V | tail -n 1)"
+            if [[ ! "$latest_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              echo "::error::Could not determine the latest semantic version"
+              exit 1
+            fi
+            tag="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
+          fi
+
+          if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release tag $tag must be a bare semantic version such as 1.0.1"
+            exit 1
+          fi
+
+          if ! git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
+            master_sha="$(git rev-parse HEAD)"
+            git tag "$tag" "$master_sha"
+            git push origin "refs/tags/$tag"
+            echo "Created tag $tag on master at $master_sha"
+          else
+            echo "Using existing tag $tag"
+          fi
+
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --verify-tag \
+              --title "$tag" \
+              --generate-notes
+            echo "Created GitHub release $tag"
+          else
+            echo "Using existing GitHub release $tag"
+          fi
+
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

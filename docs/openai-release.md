@@ -20,7 +20,7 @@ versioned contract.
 | Default MCP URL | `https://mcp.pics.io/mcp` |
 | MCP URL override | An HTTPS URL supplied through the workflow's `mcp_url` input |
 | Authentication | Configure or reuse it in OpenAI Platform; omit ZIP auth overrides |
-| Release tag format | Bare semantic version, for example `1.0.2` |
+| Release tag format | Bare semantic version, for example `1.0.2`; a manual run can create it automatically |
 | Release asset | `<plugin_name>-codex-plugin-<version>.zip` |
 
 Source manifests use `picsio`. Automatic release builds also use `picsio` and
@@ -75,26 +75,29 @@ sets root `plugin.json` to the requested package name, validates the result, and
 archives that staged tree. It does not commit build-time changes to `master`.
 
 1. Merge the intended plugin changes into `master`.
-2. Choose a new bare semantic version such as `1.0.2`. Do not prefix it with
-   `v`.
-3. Create and publish a GitHub release targeting `master`:
-
-   ```bash
-   gh release create 1.0.2 \
-     --target master \
-     --title "1.0.2" \
-     --generate-notes
-   ```
-
-4. Open **Actions → Release plugin ZIP** and wait for the run to finish. A
-   release event uses the default package name `picsio`.
-5. Download `picsio-codex-plugin-1.0.2.zip` from the GitHub release assets.
+2. Open **Actions → Release plugin ZIP → Run workflow**.
+3. Leave `tag` blank to increment the highest existing semantic version by one
+   patch release. Both bare tags and legacy `v`-prefixed tags are considered,
+   but the new tag is always bare. For example, `v0.1.0` produces `0.1.1`.
+4. Alternatively, enter the exact bare semantic version to create, such as
+   `1.0.2`. If it does not exist, the workflow creates it on the current
+   `master` commit. If it already exists, the workflow reuses it.
+5. Set optional package-name and MCP-URL overrides, then run the workflow.
+6. The workflow creates the GitHub release when needed, builds the ZIP, and
+   attaches it to that release.
+7. Download `picsio-codex-plugin-1.0.2.zip` from the GitHub release assets.
    An override build uses its selected name, for example
    `app-example-codex-plugin-1.0.2.zip`.
+
+Publishing a GitHub release manually is still supported. Its `release` event
+uses the published release tag and builds from that tagged source.
 
 The workflow uses Node.js 26 on `ubuntu-latest` and performs these checks:
 
 - the tag is a bare `MAJOR.MINOR.PATCH` version;
+- a manual run creates a missing requested tag on `master`, or creates the next
+  patch tag when `tag` is blank;
+- a matching GitHub release exists before the ZIP is uploaded;
 - the package name is `picsio` by default or the valid `plugin_name` supplied
   to a manual run;
 - the MCP endpoint is the default URL or the valid HTTPS `mcp_url` supplied to
@@ -110,11 +113,13 @@ The workflow uses Node.js 26 on `ubuntu-latest` and performs these checks:
 
 ## Rebuild an existing release
 
-Use this when a release exists but its ZIP is missing or failed validation.
+Use this when a tag or release exists but its ZIP is missing or failed
+validation.
 
 1. Open **Actions → Release plugin ZIP**.
 2. Select **Run workflow**.
-3. Enter the existing bare release tag, for example `1.0.1`.
+3. Enter the existing bare release tag, for example `1.0.1`. Leave it blank
+   only when you intend to create a new patch release.
 4. For a new plugin, leave `plugin_name` as `picsio`. For an update, enter the
    existing plugin's exact assigned app ID.
 5. Leave `mcp_url` at `https://mcp.pics.io/mcp`, or enter the custom HTTPS MCP
@@ -122,9 +127,9 @@ Use this when a release exists but its ZIP is missing or failed validation.
 6. Run the workflow.
 
 The upload uses `--clobber`, so rerunning replaces an asset with the same name.
-The GitHub release must already exist. Manual runs package the latest default
-branch and attach that build to the selected release tag; they do not check out
-the older tag's source.
+If the selected tag has no GitHub release, the workflow creates one. Manual
+runs package the latest `master` branch and attach that build to the selected
+release tag; they do not check out an older tag's source.
 
 ## Create a new OpenAI plugin
 

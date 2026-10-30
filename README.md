@@ -212,7 +212,8 @@ plugin.
 For OpenAI/Codex ZIP releases, follow
 [`docs/openai-release.md`](./docs/openai-release.md). It documents new versus
 existing plugin names, both MCP manifests, release-tag versioning, automated
-ZIP build, submission steps, and common validation failures.
+tag and GitHub release creation, ZIP build, submission steps, and common
+validation failures.
 
 ## Links
 
