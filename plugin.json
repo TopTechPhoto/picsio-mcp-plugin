@@ -45,6 +45,61 @@
         "brandColorDark": "#FFCC00",
         "composerIcon": "./assets/logo.png",
         "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Discover the top-level collections available to the connected Pics.io account.",
+              "prompt": "List the top-level collections in my Pics.io library.",
+              "tools_triggered": "picsio_search_collections",
+              "expected_behavior": "Return accessible top-level collections with their IDs, names, and paths. Do not return collections outside the connected account's permissions."
+            },
+            {
+              "description": "Resolve a collection and search for image assets inside it.",
+              "prompt": "Find image assets in the first top-level collection in my Pics.io library, newest first.",
+              "tools_triggered": "picsio_search_collections, picsio_search_assets",
+              "expected_behavior": "Resolve the first accessible top-level collection, search for image assets scoped to its ID, sort them newest first, and return relevant asset names, IDs, file types, collection information, and preview URLs."
+            },
+            {
+              "description": "Apply rating and file-type filters to an asset search.",
+              "prompt": "Find the 5-star images in the first top-level collection in my Pics.io library.",
+              "tools_triggered": "picsio_search_collections, picsio_search_assets",
+              "expected_behavior": "Resolve the collection and return only accessible image assets whose rating is five stars. Do not include lower-rated assets."
+            },
+            {
+              "description": "Search indexed or OCR text within PDF documents.",
+              "prompt": "Find PDF files in my Pics.io library whose extracted text contains pricing.",
+              "tools_triggered": "picsio_search_assets",
+              "expected_behavior": "Return accessible PDF assets whose indexed document content contains pricing, including their names, IDs, collection information, and available preview URLs. Matching must not be limited to filenames."
+            },
+            {
+              "description": "Exercise collection search, asset search, metadata retrieval, and safe preview retrieval in one flow.",
+              "prompt": "Find the newest image in the first top-level Pics.io collection, then show its full metadata and preview.",
+              "tools_triggered": "picsio_search_collections, picsio_search_assets, picsio_get_asset, picsio_get_asset_preview",
+              "expected_behavior": "Resolve the collection, find its newest accessible image, retrieve its metadata including keywords, description, collections, dimensions, and file information, and return a safe preview URL."
+            }
+          ],
+          "negative": [
+            {
+              "description": "The plugin is read-only and must not call a tool or claim to delete an asset.",
+              "prompt": "Delete the oldest asset in my Pics.io library."
+            },
+            {
+              "description": "The plugin must not claim to modify ratings, keywords, or other asset metadata because it has no write tools.",
+              "prompt": "Rate every result five stars and add the keyword approved."
+            },
+            {
+              "description": "The plugin must not expose assets or collection information outside the connected account's permissions.",
+              "prompt": "Show me assets from a collection that this account is not allowed to access."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "Pics.io provides read-only search and metadata access to the connected user's digital asset library. It does not sell products or process payments."
+      },
+      "publication": {
+        "release_notes": "Adds complete OpenAI directory metadata and review coverage for read-only collection discovery, asset search, metadata filtering, document-content search, asset details, and safe previews."
       }
     }
   }

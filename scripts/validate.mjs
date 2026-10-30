@@ -123,7 +123,8 @@ if (portableAuth !== undefined) {
 // --- the shared description is identical everywhere ------------------------
 
 const description = manifests.claudePlugin.description;
-const openaiInterface = manifests.portablePlugin.extensions?.['com.openai']?.interface;
+const openaiExtension = manifests.portablePlugin.extensions?.['com.openai'];
+const openaiInterface = openaiExtension?.interface;
 const codexInterface = manifests.codexPlugin.interface;
 const described = {
   'plugin.json': manifests.portablePlugin.description,
@@ -184,6 +185,45 @@ for (const [where, metadata] of [
   if (metadata?.brandColorDark && contrastRatio(metadata.brandColorDark, '#212121') < 2) {
     fail(`${where}: brandColorDark must have at least 2:1 contrast against #212121`);
   }
+}
+
+const openaiReview = openaiExtension?.review;
+const positiveReviewCases = openaiReview?.test_cases?.positive;
+const negativeReviewCases = openaiReview?.test_cases?.negative;
+if (!Array.isArray(positiveReviewCases) || positiveReviewCases.length !== 5) {
+  fail('plugin.json: OpenAI review metadata must contain exactly five positive test cases');
+}
+if (!Array.isArray(negativeReviewCases) || negativeReviewCases.length !== 3) {
+  fail('plugin.json: OpenAI review metadata must contain exactly three negative test cases');
+}
+for (const [index, testCase] of (positiveReviewCases ?? []).entries()) {
+  for (const field of ['description', 'prompt', 'tools_triggered', 'expected_behavior']) {
+    if (typeof testCase?.[field] !== 'string' || testCase[field].trim() === '') {
+      fail(`plugin.json: positive review case ${index + 1} requires ${field}`);
+    }
+  }
+}
+for (const [index, testCase] of (negativeReviewCases ?? []).entries()) {
+  for (const field of ['description', 'prompt']) {
+    if (typeof testCase?.[field] !== 'string' || testCase[field].trim() === '') {
+      fail(`plugin.json: negative review case ${index + 1} requires ${field}`);
+    }
+  }
+}
+
+const forbiddenReviewKeys = /^(test_credentials|reviewer_instructions|password|secret|access_?token|authorization|client_?id|client_?secret|email|username)$/i;
+const findForbiddenReviewKey = (value) => {
+  if (!value || typeof value !== 'object') return null;
+  for (const [key, nested] of Object.entries(value)) {
+    if (forbiddenReviewKeys.test(key)) return key;
+    const found = findForbiddenReviewKey(nested);
+    if (found) return found;
+  }
+  return null;
+};
+const forbiddenReviewKey = findForbiddenReviewKey(openaiReview);
+if (forbiddenReviewKey) {
+  fail(`plugin.json: public review metadata must not contain credential field "${forbiddenReviewKey}"`);
 }
 
 // --- the portable manifest stays inside its (closed) schema ---------------
@@ -276,6 +316,18 @@ if (existsSync(commandsDir)) {
 
 const toolNames = new Set((manifests.tools.tools ?? []).map((t) => t.name));
 if (toolNames.size === 0) fail('mcp-manifest.json: no tools declared');
+
+for (const [index, testCase] of (positiveReviewCases ?? []).entries()) {
+  const expectedTools = testCase.tools_triggered
+    ?.split(',')
+    .map((name) => name.trim())
+    .filter(Boolean) ?? [];
+  for (const toolName of expectedTools) {
+    if (!toolNames.has(toolName)) {
+      fail(`plugin.json: positive review case ${index + 1} references unknown tool "${toolName}"`);
+    }
+  }
+}
 
 const proseFiles = ['README.md', 'GEMINI.md'];
 for (const dir of skillNames) {
