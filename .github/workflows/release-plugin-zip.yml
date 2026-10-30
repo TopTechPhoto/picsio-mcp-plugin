@@ -9,6 +9,11 @@ on:
         description: Existing release tag to rebuild and update
         required: true
         type: string
+      plugin_name:
+        description: Package name for plugin.json; use an assigned app ID only when updating an existing plugin
+        required: false
+        default: picsio
+        type: string
 
 permissions:
   contents: write
@@ -20,12 +25,13 @@ jobs:
     timeout-minutes: 5
     env:
       RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      PACKAGE_PLUGIN_NAME: ${{ inputs.plugin_name || 'picsio' }}
 
     steps:
-      - name: Check out the release tag
+      - name: Check out release source
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.event.release.tag_name }}
           fetch-depth: 0
 
       - name: Set up Node.js
@@ -39,28 +45,37 @@ jobs:
           set -euo pipefail
 
           version="$RELEASE_TAG"
+          package_plugin_name="$PACKAGE_PLUGIN_NAME"
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Release tag $version must be a bare semantic version such as 1.0.1"
             exit 1
           fi
+          if (( ${#package_plugin_name} > 64 )) || \
+            [[ ! "$package_plugin_name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "::error::Plugin name must use lowercase letters, numbers, and single hyphens"
+            exit 1
+          fi
 
-          update_version() {
+          update_manifest() {
             local file="$1"
             local filter="$2"
             local temporary="${file}.tmp"
-            jq --arg version "$version" "$filter" "$file" > "$temporary"
+            jq \
+              --arg version "$version" \
+              --arg plugin_name "$package_plugin_name" \
+              "$filter" "$file" > "$temporary"
             mv "$temporary" "$file"
           }
 
-          update_version plugin.json '.version = $version'
-          update_version .claude-plugin/plugin.json '.version = $version'
-          update_version .claude-plugin/marketplace.json \
+          update_manifest plugin.json '.name = $plugin_name | .version = $version'
+          update_manifest .claude-plugin/plugin.json '.version = $version'
+          update_manifest .claude-plugin/marketplace.json \
             '.metadata.version = $version | .plugins[0].version = $version'
-          update_version .codex-plugin/plugin.json '.version = $version'
-          update_version .cursor-plugin/plugin.json '.version = $version'
-          update_version gemini-extension.json '.version = $version'
-          update_version mcp-manifest.json '.version = $version'
-          update_version server.json '.version = $version'
+          update_manifest .codex-plugin/plugin.json '.version = $version'
+          update_manifest .cursor-plugin/plugin.json '.version = $version'
+          update_manifest gemini-extension.json '.version = $version'
+          update_manifest mcp-manifest.json '.version = $version'
+          update_manifest server.json '.version = $version'
 
           # Backfill releases tagged before the portable MCP manifest was added.
           if [[ ! -f mcp.json ]]; then
@@ -75,7 +90,7 @@ jobs:
             }' .mcp.json > mcp.json
           fi
 
-          node scripts/validate.mjs
+          OPENAI_PLUGIN_NAME="$package_plugin_name" node scripts/validate.mjs
 
           if jq -e '
             .. | objects | to_entries[]? |
@@ -154,6 +169,12 @@ jobs:
           if unzip -p "$zip_path" mcp.json | \
             jq -e '.mcpServers.picsio.extensions["com.openai"].auth? != null' >/dev/null; then
             echo "::error::Packaged mcp.json must omit the existing app's auth configuration"
+            exit 1
+          fi
+
+          packaged_plugin_name="$(unzip -p "$zip_path" plugin.json | jq -r '.name')"
+          if [[ "$packaged_plugin_name" != "$PACKAGE_PLUGIN_NAME" ]]; then
+            echo "::error::Packaged plugin name $packaged_plugin_name does not match $PACKAGE_PLUGIN_NAME"
             exit 1
           fi
 

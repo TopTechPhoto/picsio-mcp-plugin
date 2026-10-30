@@ -205,13 +205,13 @@ node scripts/validate.mjs        # manifests, skills, commands, tool references
 Both run in CI on every pull request, plus weekly to catch the endpoint
 disappearing. See [CONTRIBUTING.md](./CONTRIBUTING.md) before changing a
 manifest — shared versions, descriptions, and MCP settings are duplicated by
-design. `validate.mjs` keeps them synchronized and enforces the separate
-OpenAI-assigned package ID.
+design. `validate.mjs` keeps them synchronized, while the release workflow can
+override the root package name when updating an existing OpenAI plugin.
 
 For OpenAI/Codex ZIP releases, follow
-[`docs/openai-release.md`](./docs/openai-release.md). It documents the assigned
-plugin ID, both MCP manifests, release-tag versioning, automated ZIP build,
-submission steps, and common validation failures.
+[`docs/openai-release.md`](./docs/openai-release.md). It documents new versus
+existing plugin names, both MCP manifests, release-tag versioning, automated
+ZIP build, submission steps, and common validation failures.
 
 ## Links
 

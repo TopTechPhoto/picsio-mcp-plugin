@@ -29,10 +29,9 @@ Cursor manifests carry it instead.
 ## The duplication rule
 
 `version`, `description` and the MCP URL appear in several manifests. They must
-stay synchronized. The package name has one intentional exception: root
-`plugin.json` uses OpenAI's assigned ID
-`app-6ab67f879bfc81919e4ffcd24759c639`; the other ecosystems use `picsio`.
-The validator enforces both values.
+stay synchronized. Source manifests use `picsio` as the package name. For an
+update to an existing OpenAI plugin, the release workflow can replace only the
+root `plugin.json` name with the app ID supplied through `plugin_name`.
 
 When you change shared metadata manually, update every source file in the same
 commit:
@@ -53,8 +52,8 @@ Add an entry to [`CHANGELOG.md`](./CHANGELOG.md) with every release.
 OpenAI/Codex release ZIPs use the GitHub release tag as their version and are
 built by CI. Follow [`docs/openai-release.md`](./docs/openai-release.md); do not
 hand-build the public ZIP. Keep both `mcp.json` and `.mcp.json`, and never add
-an auth override or credentials to either file. Authentication for the existing
-OpenAI app is managed in OpenAI Platform.
+an auth override or credentials to either file. Authentication is configured
+and managed in OpenAI Platform.
 
 ## Adding a skill
 

@@ -1,29 +1,31 @@
 # Build and release the OpenAI / Codex plugin ZIP
 
-This is the canonical release procedure for the ZIP uploaded to the existing
-Pics.io plugin in OpenAI Platform. Use the GitHub Actions workflow instead of
-assembling the archive by hand.
+This is the canonical release procedure for ZIPs uploaded to OpenAI Platform.
+It supports creating a new Pics.io plugin and updating an existing plugin. Use
+the GitHub Actions workflow instead of assembling the archive by hand.
 
 ## Package contract
 
-These values identify the existing OpenAI plugin and its MCP connection. Treat
-them as a versioned contract.
+These values identify the package and its MCP connection. Treat them as a
+versioned contract.
 
 | Item | Required value |
 | --- | --- |
-| OpenAI plugin ID in `plugin.json` | `app-6ab67f879bfc81919e4ffcd24759c639` |
+| Default `plugin.json` name | `picsio` |
+| Existing plugin override | Its assigned app ID, supplied through the workflow's `plugin_name` input |
 | Display name | `Pics.io` |
 | Portable MCP file | `mcp.json` |
 | Codex compatibility MCP file | `.mcp.json` |
 | MCP server name | `picsio` |
 | MCP URL | `https://mcp.pics.io/mcp` |
-| Authentication | Reuse the existing OpenAI app connection; omit ZIP auth overrides |
+| Authentication | Configure or reuse it in OpenAI Platform; omit ZIP auth overrides |
 | Release tag format | Bare semantic version, for example `1.0.2` |
 | Release asset | `picsio-codex-plugin-<version>.zip` |
 
-Do not change the OpenAI plugin ID back to `picsio`. The other ecosystem
-manifests keep `picsio` as their package name. `scripts/validate.mjs` enforces
-this intentional difference.
+Source manifests use `picsio`. Automatic release builds also use `picsio`,
+which is suitable for creating a new plugin. When updating an existing plugin,
+run the workflow manually and set `plugin_name` to the exact app ID required by
+OpenAI Platform. Other ecosystem manifests always remain `picsio`.
 
 Do not remove either MCP file:
 
@@ -34,7 +36,7 @@ Do not remove either MCP file:
 
 Never add `extensions["com.openai"].auth`, a `clientId`, client secret, access
 token, authorization header, or static request headers to either MCP file. The
-existing OpenAI app already stores its authentication configuration.
+plugin's authentication configuration belongs in OpenAI Platform, not the ZIP.
 
 ## Validate a change locally
 
@@ -48,7 +50,7 @@ Before releasing, confirm the portable package identity and MCP connection:
 
 ```bash
 jq -r '.name' plugin.json
-# app-6ab67f879bfc81919e4ffcd24759c639
+# picsio
 
 jq -r '.mcpServers.picsio.url' mcp.json
 # https://mcp.pics.io/mcp
@@ -65,10 +67,9 @@ git status --short
 
 ## Create a release
 
-The release tag is the source of truth for the ZIP version. The workflow
-rewrites every version-bearing manifest in its build workspace, validates the
-result, and archives that staged tree. It does not commit the rewritten
-versions back to `master`.
+The release tag is the source of truth for the ZIP version. The workflow also
+sets root `plugin.json` to the requested package name, validates the result, and
+archives that staged tree. It does not commit build-time changes to `master`.
 
 1. Merge the intended plugin changes into `master`.
 2. Choose a new bare semantic version such as `1.0.2`. Do not prefix it with
@@ -82,12 +83,15 @@ versions back to `master`.
      --generate-notes
    ```
 
-4. Open **Actions → Release plugin ZIP** and wait for the run to finish.
+4. Open **Actions → Release plugin ZIP** and wait for the run to finish. A
+   release event uses the default package name `picsio`.
 5. Download `picsio-codex-plugin-1.0.2.zip` from the GitHub release assets.
 
 The workflow uses Node.js 26 on `ubuntu-latest` and performs these checks:
 
 - the tag is a bare `MAJOR.MINOR.PATCH` version;
+- the package name is `picsio` by default or the valid `plugin_name` supplied
+  to a manual run;
 - all version-bearing manifests are updated to the tag;
 - `node scripts/validate.mjs` passes after the update;
 - neither MCP file contains an auth override, fixed credentials, or headers;
@@ -104,23 +108,37 @@ Use this when a release exists but its ZIP is missing or failed validation.
 1. Open **Actions → Release plugin ZIP**.
 2. Select **Run workflow**.
 3. Enter the existing bare release tag, for example `1.0.1`.
-4. Run the workflow.
+4. For a new plugin, leave `plugin_name` as `picsio`. For an update, enter the
+   existing plugin's exact assigned app ID.
+5. Run the workflow.
 
 The upload uses `--clobber`, so rerunning replaces an asset with the same name.
-The GitHub release must already exist.
+The GitHub release must already exist. Manual runs package the latest default
+branch and attach that build to the selected release tag; they do not check out
+the older tag's source.
 
-## Upload the new package to OpenAI
+## Create a new OpenAI plugin
 
-1. Open the existing Pics.io plugin in
-   [OpenAI Platform](https://platform.openai.com/plugins).
-2. Choose **Upload new version**. Do not create a second plugin.
-3. Upload the generated `picsio-codex-plugin-<version>.zip`.
+1. Build with the default package name `picsio`.
+2. Open [OpenAI Platform](https://platform.openai.com/plugins) and choose
+   **Upload new or existing plugin**.
+3. Upload `picsio-codex-plugin-<version>.zip` as a new plugin.
 4. Under **Metadata & Skills**, confirm the package version and automated
    checks.
-5. Under **MCPs**, confirm that the existing `picsio` connection and
-   `https://mcp.pics.io/mcp` endpoint are preserved.
-6. Reconnect if authentication settings changed, then rescan the MCP tools.
+5. Under **MCPs**, connect `https://mcp.pics.io/mcp` and configure OAuth/DCR
+   for the new app.
+6. Complete domain verification and rescan the MCP tools.
 7. Complete review information and submit the new draft.
+
+## Update an existing OpenAI plugin
+
+1. Copy the exact package name required by the existing plugin. OpenAI may show
+   an assigned ID such as `app-...` in a name-mismatch error.
+2. Run **Release plugin ZIP** manually with the release tag and that exact value
+   in `plugin_name`.
+3. Open the existing plugin and choose **Upload new version**.
+4. Upload the regenerated ZIP and confirm the existing MCP connection remains.
+5. Reconnect only when changing authentication in OpenAI Platform, then rescan.
 
 Changing the MCP server origin is not a normal package update. Contact OpenAI
 support before changing its scheme, hostname, or port.
@@ -141,7 +159,7 @@ implementation.
 
 | Message | Cause | Fix |
 | --- | --- | --- |
-| `Plugin name must match the existing plugin` | Root `plugin.json` does not use the assigned OpenAI plugin ID. | Restore `app-6ab67f879bfc81919e4ffcd24759c639`; do not change the other ecosystem package names. |
+| `Plugin name must match the existing plugin` | An update ZIP used `picsio` instead of the existing plugin's assigned package name. | Run the workflow manually and pass the exact required value through `plugin_name`. |
 | `Keep the existing MCP connection` | Portable root `mcp.json` is missing from the ZIP. | Restore `mcp.json`, keep the `picsio` server name and URL, rebuild the ZIP, and upload it to the existing plugin. |
 | `This app already has authentication configured` | `mcp.json` includes an `extensions.com.openai.auth` override. | Remove the entire auth override and reuse authentication stored on the existing OpenAI app. |
 | `plugin_version_unchanged` | The release reused an uploaded version. | Create a release with a new bare semantic version. |

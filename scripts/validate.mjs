@@ -24,7 +24,7 @@ const readJson = (rel) => {
 
 const MCP_URL = 'https://mcp.pics.io/mcp';
 const PLUGIN_NAME = 'picsio';
-const OPENAI_PLUGIN_NAME = 'app-6ab67f879bfc81919e4ffcd24759c639';
+const OPENAI_PLUGIN_NAME = process.env.OPENAI_PLUGIN_NAME || PLUGIN_NAME;
 
 const manifests = {
   portablePlugin: readJson('plugin.json'),
