@@ -23,6 +23,7 @@ const readJson = (rel) => {
 };
 
 const MCP_URL = 'https://mcp.pics.io/mcp';
+const MCP_REGISTRATION_URL = 'https://mcp.pics.io/oauth/register';
 const PLUGIN_NAME = 'picsio';
 const OPENAI_PLUGIN_NAME = 'app-6ab67f879bfc81919e4ffcd24759c639';
 
@@ -35,6 +36,7 @@ const manifests = {
   cursorPlugin: readJson('.cursor-plugin/plugin.json'),
   gemini: readJson('gemini-extension.json'),
   mcp: readJson('.mcp.json'),
+  portableMcp: readJson('mcp.json'),
   server: readJson('server.json'),
   tools: readJson('mcp-manifest.json'),
 };
@@ -85,6 +87,7 @@ if (manifests.portablePlugin.name !== OPENAI_PLUGIN_NAME) {
 
 const urls = {
   '.mcp.json': manifests.mcp.mcpServers?.[PLUGIN_NAME]?.url,
+  'mcp.json': manifests.portableMcp.mcpServers?.[PLUGIN_NAME]?.url,
   'gemini-extension.json': manifests.gemini.mcpServers?.[PLUGIN_NAME]?.httpUrl,
   '.cursor-plugin/plugin.json': manifests.cursorPlugin.mcpServers?.[PLUGIN_NAME]?.url,
   'server.json': manifests.server.remotes?.[0]?.url,
@@ -94,6 +97,23 @@ for (const [where, url] of Object.entries(urls)) {
 }
 if (manifests.mcp.mcpServers?.[PLUGIN_NAME]?.type !== 'http') {
   fail('.mcp.json: picsio server must declare "type": "http"');
+}
+const portableServer = manifests.portableMcp.mcpServers?.[PLUGIN_NAME];
+if (manifests.portableMcp.$schema !== 'https://agent-plugins.org/schemas/1.0.0/mcp.schema.json') {
+  fail('mcp.json: $schema must be the Agent Plugins MCP 1.0.0 identifier');
+}
+if (portableServer?.type !== 'streamable-http') {
+  fail('mcp.json: picsio server must declare "type": "streamable-http"');
+}
+const portableAuth = portableServer?.extensions?.['com.openai']?.auth;
+if (portableAuth?.type !== 'oauth' || portableAuth?.client?.mode !== 'dcr') {
+  fail('mcp.json: Pics.io authentication must use OAuth dynamic client registration');
+}
+if (portableAuth?.registrationUrl !== MCP_REGISTRATION_URL) {
+  fail(`mcp.json: registrationUrl "${portableAuth?.registrationUrl}" != "${MCP_REGISTRATION_URL}"`);
+}
+if ('clientId' in (portableAuth?.client ?? {})) {
+  fail('mcp.json: DCR configuration must not contain clientId');
 }
 
 // --- the shared description is identical everywhere ------------------------
@@ -127,7 +147,7 @@ if (manifests.portablePlugin.$schema !== 'https://agent-plugins.org/schemas/1.0.
   fail('plugin.json: $schema must be the Agent Plugins 1.0.0 identifier');
 }
 // Components are discovered at their default locations rather than declared.
-for (const conventional of ['skills', '.mcp.json']) {
+for (const conventional of ['skills', 'mcp.json']) {
   if (!existsSync(join(root, conventional))) {
     fail(`plugin.json relies on ${conventional} at the plugin root, which is missing`);
   }

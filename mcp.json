@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "picsio": {
+      "type": "streamable-http",
+      "url": "https://mcp.pics.io/mcp",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": {
+              "mode": "dcr"
+            },
+            "registrationUrl": "https://mcp.pics.io/oauth/register",
+            "baseScopes": [
+              "assets_read",
+              "collections_read",
+              "keywords_read",
+              "customFields_read"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

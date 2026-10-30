@@ -62,6 +62,34 @@ jobs:
           update_version mcp-manifest.json '.version = $version'
           update_version server.json '.version = $version'
 
+          # Backfill releases tagged before the portable MCP manifest was added.
+          if [[ ! -f mcp.json ]]; then
+            jq '{
+              "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+              "mcpServers": {
+                "picsio": {
+                  "type": "streamable-http",
+                  "url": .mcpServers.picsio.url,
+                  "extensions": {
+                    "com.openai": {
+                      "auth": {
+                        "type": "oauth",
+                        "client": {"mode": "dcr"},
+                        "registrationUrl": "https://mcp.pics.io/oauth/register",
+                        "baseScopes": [
+                          "assets_read",
+                          "collections_read",
+                          "keywords_read",
+                          "customFields_read"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }' .mcp.json > mcp.json
+          fi
+
           node scripts/validate.mjs
 
           if jq -e '
@@ -70,8 +98,8 @@ jobs:
               .key | ascii_downcase |
               test("^(client_?id|client_?secret|access_?token|authorization|headers)$")
             )
-          ' .mcp.json >/dev/null; then
-            echo "::error::.mcp.json must not contain client credentials, tokens, authorization headers, or static headers"
+          ' .mcp.json mcp.json >/dev/null; then
+            echo "::error::MCP configuration must not contain client credentials, tokens, authorization headers, or static headers"
             exit 1
           fi
 
@@ -93,6 +121,7 @@ jobs:
             .codex-plugin/plugin.json \
             .cursor-plugin/plugin.json \
             gemini-extension.json \
+            mcp.json \
             mcp-manifest.json \
             server.json
           release_tree="$(git write-tree)"
@@ -103,6 +132,7 @@ jobs:
           for required in \
             plugin.json \
             .mcp.json \
+            mcp.json \
             .codex-plugin/plugin.json \
             assets/logo.png \
             skills/picsio-asset-search/SKILL.md \
@@ -118,16 +148,18 @@ jobs:
             exit 1
           fi
 
-          if unzip -p "$zip_path" .mcp.json | jq -e '
-            .. | objects | to_entries[]? |
-            select(
-              .key | ascii_downcase |
-              test("^(client_?id|client_?secret|access_?token|authorization|headers)$")
-            )
-          ' >/dev/null; then
-            echo "::error::Packaged .mcp.json contains forbidden credential configuration"
-            exit 1
-          fi
+          for mcp_config in .mcp.json mcp.json; do
+            if unzip -p "$zip_path" "$mcp_config" | jq -e '
+              .. | objects | to_entries[]? |
+              select(
+                .key | ascii_downcase |
+                test("^(client_?id|client_?secret|access_?token|authorization|headers)$")
+              )
+            ' >/dev/null; then
+              echo "::error::Packaged $mcp_config contains forbidden credential configuration"
+              exit 1
+            fi
+          done
 
           echo "zip_name=$zip_name" >> "$GITHUB_OUTPUT"
           echo "zip_path=$zip_path" >> "$GITHUB_OUTPUT"
