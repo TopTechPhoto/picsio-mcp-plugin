@@ -53,7 +53,8 @@ Add an entry to [`CHANGELOG.md`](./CHANGELOG.md) with every release.
 OpenAI/Codex release ZIPs use the GitHub release tag as their version and are
 built by CI. Follow [`docs/openai-release.md`](./docs/openai-release.md); do not
 hand-build the public ZIP. Keep both `mcp.json` and `.mcp.json`, and never add
-OAuth client credentials to either file.
+an auth override or credentials to either file. Authentication for the existing
+OpenAI app is managed in OpenAI Platform.
 
 ## Adding a skill
 

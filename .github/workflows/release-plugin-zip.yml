@@ -69,22 +69,7 @@ jobs:
               "mcpServers": {
                 "picsio": {
                   "type": "streamable-http",
-                  "url": .mcpServers.picsio.url,
-                  "extensions": {
-                    "com.openai": {
-                      "auth": {
-                        "type": "oauth",
-                        "client": {"mode": "dcr"},
-                        "registrationUrl": "https://mcp.pics.io/oauth/register",
-                        "baseScopes": [
-                          "assets_read",
-                          "collections_read",
-                          "keywords_read",
-                          "customFields_read"
-                        ]
-                      }
-                    }
-                  }
+                  "url": .mcpServers.picsio.url
                 }
               }
             }' .mcp.json > mcp.json
@@ -100,6 +85,11 @@ jobs:
             )
           ' .mcp.json mcp.json >/dev/null; then
             echo "::error::MCP configuration must not contain client credentials, tokens, authorization headers, or static headers"
+            exit 1
+          fi
+
+          if jq -e '.mcpServers.picsio.extensions["com.openai"].auth? != null' mcp.json >/dev/null; then
+            echo "::error::mcp.json must omit auth and reuse the existing OpenAI app connection"
             exit 1
           fi
 
@@ -160,6 +150,12 @@ jobs:
               exit 1
             fi
           done
+
+          if unzip -p "$zip_path" mcp.json | \
+            jq -e '.mcpServers.picsio.extensions["com.openai"].auth? != null' >/dev/null; then
+            echo "::error::Packaged mcp.json must omit the existing app's auth configuration"
+            exit 1
+          fi
 
           echo "zip_name=$zip_name" >> "$GITHUB_OUTPUT"
           echo "zip_path=$zip_path" >> "$GITHUB_OUTPUT"

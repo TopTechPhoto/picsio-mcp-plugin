@@ -32,7 +32,7 @@ The portable package and Codex compatibility layer use these files:
 | File | Role |
 | --- | --- |
 | [`plugin.json`](../plugin.json) | The portable **Agent Plugins 1.0.0** manifest at the plugin root. Primary. OpenAI-specific presentation lives under `extensions."com.openai".interface`. |
-| [`mcp.json`](../mcp.json) | Portable MCP declaration. Preserves the `picsio` server connection and OAuth DCR configuration for OpenAI package ingestion. |
+| [`mcp.json`](../mcp.json) | Portable MCP declaration. Preserves the `picsio` server name and URL without overriding authentication stored on the existing OpenAI app. |
 | [`.codex-plugin/plugin.json`](../.codex-plugin/plugin.json) | The legacy overlay, explicitly supported as a **compatibility fallback** — read only when the root manifest has no `extensions."com.openai"`. Kept for older Codex builds. |
 | [`.mcp.json`](../.mcp.json) | Codex compatibility MCP declaration referenced by the legacy overlay. |
 

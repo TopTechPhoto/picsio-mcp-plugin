@@ -177,7 +177,7 @@ Worth stating plainly, because an assistant plugin runs with your data:
 | Path | What it is |
 | --- | --- |
 | `plugin.json` | Portable [Agent Plugins](https://agent-plugins.org) manifest — Codex reads this first |
-| `mcp.json` | Portable MCP declaration used by OpenAI package ingestion, including OAuth DCR settings |
+| `mcp.json` | Portable MCP declaration used by OpenAI package ingestion; authentication is managed by the existing app connection |
 | `.mcp.json` | Codex compatibility MCP declaration referenced by `.codex-plugin/plugin.json` |
 | `.claude-plugin/plugin.json` | Claude Code plugin manifest |
 | `.claude-plugin/marketplace.json` | Claude Code marketplace catalog |

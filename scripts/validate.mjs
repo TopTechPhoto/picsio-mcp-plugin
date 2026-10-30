@@ -23,7 +23,6 @@ const readJson = (rel) => {
 };
 
 const MCP_URL = 'https://mcp.pics.io/mcp';
-const MCP_REGISTRATION_URL = 'https://mcp.pics.io/oauth/register';
 const PLUGIN_NAME = 'picsio';
 const OPENAI_PLUGIN_NAME = 'app-6ab67f879bfc81919e4ffcd24759c639';
 
@@ -106,14 +105,8 @@ if (portableServer?.type !== 'streamable-http') {
   fail('mcp.json: picsio server must declare "type": "streamable-http"');
 }
 const portableAuth = portableServer?.extensions?.['com.openai']?.auth;
-if (portableAuth?.type !== 'oauth' || portableAuth?.client?.mode !== 'dcr') {
-  fail('mcp.json: Pics.io authentication must use OAuth dynamic client registration');
-}
-if (portableAuth?.registrationUrl !== MCP_REGISTRATION_URL) {
-  fail(`mcp.json: registrationUrl "${portableAuth?.registrationUrl}" != "${MCP_REGISTRATION_URL}"`);
-}
-if ('clientId' in (portableAuth?.client ?? {})) {
-  fail('mcp.json: DCR configuration must not contain clientId');
+if (portableAuth !== undefined) {
+  fail('mcp.json: omit the auth override and reuse the existing OpenAI app connection');
 }
 
 // --- the shared description is identical everywhere ------------------------

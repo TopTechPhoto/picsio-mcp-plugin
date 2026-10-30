@@ -17,8 +17,7 @@ them as a versioned contract.
 | Codex compatibility MCP file | `.mcp.json` |
 | MCP server name | `picsio` |
 | MCP URL | `https://mcp.pics.io/mcp` |
-| OAuth registration | Dynamic Client Registration (DCR) |
-| DCR endpoint | `https://mcp.pics.io/oauth/register` |
+| Authentication | Reuse the existing OpenAI app connection; omit ZIP auth overrides |
 | Release tag format | Bare semantic version, for example `1.0.2` |
 | Release asset | `picsio-codex-plugin-<version>.zip` |
 
@@ -29,14 +28,13 @@ this intentional difference.
 Do not remove either MCP file:
 
 - `mcp.json` is the portable Agent Plugins declaration used by OpenAI package
-  ingestion. It uses `type: "streamable-http"` and declares OAuth DCR under
-  `extensions["com.openai"].auth`.
+  ingestion. It declares only `type: "streamable-http"` and the existing URL.
 - `.mcp.json` is the Codex compatibility declaration. It uses `type: "http"`
   and is referenced by `.codex-plugin/plugin.json`.
 
-Never add a `clientId`, client secret, access token, authorization header, or
-static request headers to either MCP file. DCR creates the OAuth client during
-connection.
+Never add `extensions["com.openai"].auth`, a `clientId`, client secret, access
+token, authorization header, or static request headers to either MCP file. The
+existing OpenAI app already stores its authentication configuration.
 
 ## Validate a change locally
 
@@ -55,8 +53,8 @@ jq -r '.name' plugin.json
 jq -r '.mcpServers.picsio.url' mcp.json
 # https://mcp.pics.io/mcp
 
-jq -r '.mcpServers.picsio.extensions["com.openai"].auth.client.mode' mcp.json
-# dcr
+jq -e '.mcpServers.picsio.extensions["com.openai"].auth? == null' mcp.json
+# true
 ```
 
 Do not continue if the working tree contains unreviewed changes:
@@ -92,7 +90,7 @@ The workflow uses Node.js 26 on `ubuntu-latest` and performs these checks:
 - the tag is a bare `MAJOR.MINOR.PATCH` version;
 - all version-bearing manifests are updated to the tag;
 - `node scripts/validate.mjs` passes after the update;
-- neither MCP file contains fixed credentials or headers;
+- neither MCP file contains an auth override, fixed credentials, or headers;
 - `plugin.json`, `mcp.json`, `.mcp.json`, the Codex overlay, skills, and logo
   exist at the ZIP root;
 - the ZIP has no wrapper directory, nested ZIP, `.git`, `.DS_Store`, or local
@@ -145,9 +143,10 @@ implementation.
 | --- | --- | --- |
 | `Plugin name must match the existing plugin` | Root `plugin.json` does not use the assigned OpenAI plugin ID. | Restore `app-6ab67f879bfc81919e4ffcd24759c639`; do not change the other ecosystem package names. |
 | `Keep the existing MCP connection` | Portable root `mcp.json` is missing from the ZIP. | Restore `mcp.json`, keep the `picsio` server name and URL, rebuild the ZIP, and upload it to the existing plugin. |
+| `This app already has authentication configured` | `mcp.json` includes an `extensions.com.openai.auth` override. | Remove the entire auth override and reuse authentication stored on the existing OpenAI app. |
 | `plugin_version_unchanged` | The release reused an uploaded version. | Create a release with a new bare semantic version. |
 | Release tag does not match package versions | A ZIP was assembled manually or an old workflow was used. | Run the current **Release plugin ZIP** workflow with the intended tag. |
-| OAuth uses the wrong client | A hardcoded `clientId` was packaged. | Use `client.mode: "dcr"`, remove `clientId`, rebuild, upload, and reconnect. |
+| OAuth uses the wrong client | The ZIP tries to replace authentication stored on the existing app. | Remove the entire auth override from `mcp.json`, rebuild, and upload again. |
 | ZIP has an extra top-level directory | The repository folder was zipped instead of its contents. | Use the release workflow; `plugin.json` and `mcp.json` must be at the archive root. |
 | Missing `destructiveHint` or other tool annotations | The hosted MCP server omits required tool metadata. | Fix and deploy the MCP server, then rescan; the ZIP cannot override scanned tool descriptors. |
 
