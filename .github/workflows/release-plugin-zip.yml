@@ -1,0 +1,107 @@
+name: Release plugin ZIP
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Build and attach plugin ZIP
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate release metadata and plugin files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node scripts/validate.mjs
+
+          version="$(jq -r '.version' plugin.json)"
+          tag="${{ github.event.release.tag_name }}"
+          if [[ "$tag" != "$version" ]]; then
+            echo "::error::Release tag $tag must match plugin.json version $version"
+            exit 1
+          fi
+
+          if jq -e '
+            .. | objects | to_entries[]? |
+            select(
+              .key | ascii_downcase |
+              test("^(client_?id|client_?secret|access_?token|authorization|headers)$")
+            )
+          ' .mcp.json >/dev/null; then
+            echo "::error::.mcp.json must not contain client credentials, tokens, authorization headers, or static headers"
+            exit 1
+          fi
+
+      - name: Build and verify ZIP
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(jq -r '.version' plugin.json)"
+          zip_name="picsio-mcp-plugin-${version}.zip"
+          zip_path="dist/${zip_name}"
+
+          mkdir -p dist
+          git archive --format=zip --output="$zip_path" HEAD
+          unzip -t "$zip_path"
+
+          entries="$(unzip -Z1 "$zip_path")"
+          for required in \
+            plugin.json \
+            .mcp.json \
+            .codex-plugin/plugin.json \
+            assets/logo.png \
+            skills/picsio-asset-search/SKILL.md \
+            skills/picsio-help-docs/SKILL.md; do
+            if ! grep -Fxq "$required" <<<"$entries"; then
+              echo "::error::Release ZIP is missing $required at the archive root"
+              exit 1
+            fi
+          done
+
+          if grep -Eq '(^|/)(\.git|\.DS_Store)(/|$)|(^|/)\.claude/settings\.local\.json$|\.zip$' <<<"$entries"; then
+            echo "::error::Release ZIP contains a local-only or nested ZIP file"
+            exit 1
+          fi
+
+          if unzip -p "$zip_path" .mcp.json | jq -e '
+            .. | objects | to_entries[]? |
+            select(
+              .key | ascii_downcase |
+              test("^(client_?id|client_?secret|access_?token|authorization|headers)$")
+            )
+          ' >/dev/null; then
+            echo "::error::Packaged .mcp.json contains forbidden credential configuration"
+            exit 1
+          fi
+
+          echo "zip_name=$zip_name" >> "$GITHUB_OUTPUT"
+          echo "zip_path=$zip_path" >> "$GITHUB_OUTPUT"
+
+      - name: Attach ZIP to GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload \
+            "${{ github.event.release.tag_name }}" \
+            "${{ steps.package.outputs.zip_path }}" \
+            --clobber
